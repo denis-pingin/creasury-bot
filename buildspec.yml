@@ -39,3 +39,4 @@ phases:
 artifacts:
   files:
   - 'aws/Dockerrun.aws.json'
+  discard-paths: yes
