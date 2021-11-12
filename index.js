@@ -51,6 +51,7 @@ client.once('ready', () => {
 });
 
 client.on('guildMemberAdd', async member => {
+	console.log(`Member added: ${member.user.tag}`);
 	const cachedInvites = guildInvites.get(member.guild.id);
 	const newInvites = await member.guild.invites.fetch();
 	try {
@@ -65,9 +66,10 @@ client.on('guildMemberAdd', async member => {
 			console.log('Warning: invite channel not found');
 		}
 		else {
-			channel.send(`User ${member.user.tag} joined the server, they were invited by ${usedInvite.inviter.tag}.`);
+			const message = `User ${member.user.tag} joined the server, they were invited by ${usedInvite.inviter.tag}.`;
+			console.log(message);
+			channel.send(message);
 		}
-
 	}
 	catch (err) {
 		console.log('OnGuildMemberAdd Error:', err);
@@ -75,6 +77,10 @@ client.on('guildMemberAdd', async member => {
 
 	newInvites.each(inv => cachedInvites.set(inv.code, inv.uses));
 	guildInvites.set(member.guild.id, cachedInvites);
+});
+
+client.on('guildMemberRemove', async member => {
+	console.log(`Member removed: ${member.user.tag}`);
 });
 
 client.on('interactionCreate', async interaction => {
