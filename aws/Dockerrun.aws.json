@@ -1,18 +1,12 @@
 {
-  "AWSEBDockerrunVersion": 2,
-  "containerDefinitions": [
+  "AWSEBDockerrunVersion": 1,
+  "Image": {
+    "Name": "{$AWS_ACCOUNT_ID}.dkr.ecr.{$AWS_DEFAULT_REGION}.amazonaws.com/creasury-bot:latest",
+    "Update": "true"
+  },
+  "Ports": [
     {
-      "name": "creasury-bot",
-      "image": "{$AWS_ACCOUNT_ID}.dkr.ecr.{$AWS_DEFAULT_REGION}.amazonaws.com/creasury-bot:latest",
-      "hostname": "creasury-bot",
-      "essential": true,
-      "memory": 512,
-      "portMappings": [
-        {
-          "hostPort": 3000,
-          "containerPort": 3000
-        }
-      ]
+      "ContainerPort": "3000"
     }
   ]
 }
