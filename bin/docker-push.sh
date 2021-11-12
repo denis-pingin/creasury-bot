@@ -2,8 +2,8 @@
 
 region=eu-central-1
 aws_account_id=668064706315
-repository=creasury
+image=creasury-bot
 tag=latest
 
-docker tag creasury-bot:${tag} ${aws_account_id}.dkr.ecr.${region}.amazonaws.com/${repository}:${tag}
-docker push ${aws_account_id}.dkr.ecr.${region}.amazonaws.com/${repository}:${tag}
+docker tag ${image}:${tag} ${aws_account_id}.dkr.ecr.${region}.amazonaws.com/${image}:${tag}
+docker push ${aws_account_id}.dkr.ecr.${region}.amazonaws.com/${image}:${tag}
