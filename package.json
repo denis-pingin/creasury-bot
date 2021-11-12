@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "babel-node index.js",
-    "deploy-commands": "babel-node deploy-commands.js"
+    "babel": "babel ./src/index.js -o build/index.bundle.js",
+    "start": "babel-node ./src/index.js",
+    "deploy-commands": "babel-node ./src/deploy-commands.js"
   },
   "author": "Creasury Monarch",
   "license": "ISC",
@@ -19,11 +20,15 @@
   "babel": {
     "presets": [
       [
-        "@babel/preset-env"
+        "@babel/preset-env",
+        {
+          "targets": "defaults"
+        }
       ]
     ]
   },
   "devDependencies": {
+    "@babel/cli": "^7.16.0",
     "@babel/core": "^7.16.0",
     "@babel/node": "^7.16.0",
     "@babel/preset-env": "^7.16.0",
