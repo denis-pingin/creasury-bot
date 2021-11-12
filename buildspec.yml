@@ -1,5 +1,11 @@
 version: 0.2
 
+eb_codebuild_settings:
+  CodeBuildServiceRole: "arn:aws:iam::668064706315:role/service-role/codebuild-creasury-bot-build-service-role"
+  ComputeType: "BUILD_GENERAL1_SMALL"
+  Image: "node:16-alpine"
+  Timeout: 60
+
 env:
   variables:
     DISCORD_CLIENT_ID: "908517049687494656"
@@ -13,9 +19,6 @@ env:
     DISCORD_TOKEN: "arn:aws:secretsmanager:eu-central-1:668064706315:secret:creasury-bot/dev-9EGGqq:DISCORD_TOKEN"
 
 phases:
-  install:
-    runtime-versions:
-      nodejs: 16.x
   pre_build:
     commands:
     - echo Logging in to Amazon ECR...

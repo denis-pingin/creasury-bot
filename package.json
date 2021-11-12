@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "babel": "babel ./src/index.js -o build/index.bundle.js",
+    "babel": "babel ./src -d build",
     "start": "babel-node ./src/index.js",
     "deploy-commands": "babel-node ./src/deploy-commands.js"
   },
@@ -15,7 +15,8 @@
     "@discordjs/rest": "^0.1.0-canary.0",
     "discord-api-types": "^0.24.0",
     "discord.js": "^13.3.1",
-    "dotenv": "^10.0.0"
+    "dotenv": "^10.0.0",
+    "regenerator-runtime": "^0.13.9"
   },
   "babel": {
     "presets": [
