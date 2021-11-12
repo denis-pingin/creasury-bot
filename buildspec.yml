@@ -21,9 +21,6 @@ env:
     DISCORD_TOKEN: "arn:aws:secretsmanager:eu-central-1:668064706315:secret:creasury-bot/dev-9EGGqq:DISCORD_TOKEN"
 
 phases:
-  install:
-    runtime-versions:
-      docker: 18
   pre_build:
     commands:
     - echo Logging in to Amazon ECR...
