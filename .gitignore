@@ -1,7 +1,6 @@
 node_modules/
 .idea
 .env
-config.json
 build/
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
