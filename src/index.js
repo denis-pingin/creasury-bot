@@ -70,7 +70,7 @@ client.on('guildMemberAdd', async member => {
     let message = `${getUserTag(member.user)} has joined Creasury community. They were invited by .`;
     if (usedInvite) {
       const inviteCount = await db.incrementInvites(usedInvite.inviter, member.guild.id);
-      message += `${getUserTag(usedInvite.inviter)}, who just gained 1 point and is now at ${inviteCount} } ${inviteCount === 1 ? 'point' : 'points'}.`;
+      message += `${getUserTag(usedInvite.inviter)}, who just gained 1 point and now has ${inviteCount} ${inviteCount === 1 ? 'point' : 'points'} in total.`;
     } else {
       message += 'some mysterious force, which some of us might want to investigate.';
       console.log('Warning: inviter could not be found', [...newInvites.values()].map(inv => inv.code), [...cachedInvites.keys()]);
@@ -93,7 +93,7 @@ client.on('guildMemberRemove', async member => {
     const inviter = await db.getInviter(member);
     if (inviter) {
       const inviteCount = await db.decrementInvites(inviter, member.guild.id);
-      message += `${getUserTag(inviter)}, who just lost 1 point and is currently at ${inviteCount} ${inviteCount === 1 ? 'point' : 'points'}.`;
+      message += `${getUserTag(inviter)}, who just lost 1 point and now has ${inviteCount} ${inviteCount === 1 ? 'point' : 'points'} in total.`;
     } else {
       message += 'some mysterious force, which some of us might want to investigate.';
     }
