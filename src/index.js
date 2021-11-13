@@ -2,8 +2,9 @@ import 'regenerator-runtime/runtime.js';
 import { config } from './config';
 import { Client, Intents, Collection } from 'discord.js';
 import * as fs from 'fs';
-import * as db from './db';
-import { getUserTag } from './util';
+import { getUserTag, sendLogMessage } from './util';
+import handleGuildMemberAdd from './events/guildMemberAdd';
+import handleGuildMemberRemove from './events/guildMemberRemove';
 
 console.log(`Creasury Bot is starting for guild: ${config.guildId}`);
 
@@ -23,7 +24,7 @@ const guildInvites = new Map();
 
 client.once('ready', () => {
   try {
-    console.log('Creasury Bot ready!');
+    sendLogMessage(client, 'Creasury Bot ready!');
     client.guilds.cache
       .filter(guild => guild.id === config.guildId)
       .forEach(guild => {
@@ -48,7 +49,7 @@ client.on('inviteCreate', async invite => {
   try {
     if (invite.guild.id !== config.guildId) return;
 
-    console.log('New invite link created');
+    sendLogMessage(client, `A new invite code ${invite.code} was created by ${getUserTag(invite.inviter)} for channel <#${invite.channel.id}>.`);
     const invites = await invite.guild.invites.fetch();
 
     const codeUses = new Map();
@@ -70,21 +71,14 @@ client.on('guildMemberAdd', async member => {
     const newInvites = await member.guild.invites.fetch();
 
     const usedInvite = newInvites.find(inv => cachedInvites.get(inv.code) < inv.uses);
+    if (!usedInvite) {
+      console.log(`Warning: inviter for member ${getUserTag(member.user)} could not be found`, [...newInvites.values()].map(inv => inv.code), [...cachedInvites.keys()]);
+    }
+
     newInvites.each(inv => cachedInvites.set(inv.code, inv.uses));
     guildInvites.set(member.guild.id, cachedInvites);
 
-    db.addMember(member, usedInvite?.inviter);
-
-    let message = `${getUserTag(member.user)} has joined the Creasury community. They were invited by `;
-    if (usedInvite) {
-      const inviteCount = await db.incrementGlobalInvites(usedInvite.inviter, member.guild.id);
-      message += `${getUserTag(usedInvite.inviter)}, who just gained 1 point and now has ${inviteCount} ${inviteCount === 1 ? 'point' : 'points'} in total.`;
-    } else {
-      message += 'some mysterious force, which some of us might want to investigate.';
-      console.log('Warning: inviter could not be found', [...newInvites.values()].map(inv => inv.code), [...cachedInvites.keys()]);
-    }
-
-    sendInviteMessage(message);
+    await handleGuildMemberAdd(client, member, usedInvite?.inviter);
   } catch (err) {
     console.log('OnGuildMemberAdd Error:', err);
   }
@@ -96,19 +90,7 @@ client.on('guildMemberRemove', async member => {
 
     console.log(`Member removed: ${getUserTag(member.user)}`);
 
-    db.removeMember(member);
-
-    let message = `${getUserTag(member.user)} has left the Creasury community. They were invited by `;
-
-    const inviter = await db.getInviter(member);
-    if (inviter) {
-      const inviteCount = await db.decrementGlobalInvites(inviter, member.guild.id);
-      message += `${getUserTag(inviter)}, who just lost 1 point and now has ${inviteCount} ${inviteCount === 1 ? 'point' : 'points'} in total.`;
-    } else {
-      message += 'some mysterious force, which some of us might want to investigate.';
-    }
-
-    sendInviteMessage(message);
+    await handleGuildMemberRemove(client, member);
   } catch (err) {
     console.log('OnGuildMemberRemove Error:', err);
   }
@@ -131,16 +113,5 @@ client.on('interactionCreate', async interaction => {
     }
   }
 });
-
-function sendInviteMessage(message) {
-  console.log(message);
-
-  const channel = client.channels.cache.get(config.inviteChannelId);
-  if (!channel) {
-    console.log('Warning: invite channel not found');
-  } else {
-    channel.send(message);
-  }
-}
 
 client.login(config.token);
