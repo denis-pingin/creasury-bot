@@ -18,7 +18,7 @@ async function getInviter(member) {
   const invitesCollection = database.collection('invites');
 
   const result = await invitesCollection.findOne({ id: member.user.id, guildId: member.guild.id });
-  if (result) {
+  if (result?.inviter) {
     console.log(`Found inviter for member ${getUserTag(member.user)}: ${getUserTag(result.inviter)}.`);
     return result.inviter;
   } else {
