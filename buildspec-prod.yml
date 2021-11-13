@@ -1,24 +1,11 @@
 version: 0.2
 
-#eb_codebuild_settings:
-#  CodeBuildServiceRole: "arn:aws:iam::668064706315:role/service-role/codebuild-creasury-bot-build-service-role"
-#  ComputeType: "BUILD_GENERAL1_SMALL"
-#  Image: "node:16-alpine"
-#  Timeout: 60
-
 env:
   variables:
     AWS_DEFAULT_REGION: "eu-central-1"
     AWS_ACCOUNT_ID: "668064706315"
-    IMAGE_NAME: "creasury-bot"
+    IMAGE_NAME: "creasury-bot-prod"
     IMAGE_TAG: "latest"
-
-    DISCORD_CLIENT_ID: "908517049687494656"
-    DISCORD_GUILD_ID: "896118395530002462"
-    DISCORD_INVITE_CHANNEL_ID: "896118395978784800"
-
-  secrets-manager:
-    DISCORD_TOKEN: "arn:aws:secretsmanager:eu-central-1:668064706315:secret:creasury-bot/dev-9EGGqq:DISCORD_TOKEN"
 
 phases:
   pre_build:
@@ -38,5 +25,5 @@ phases:
     - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_NAME:$IMAGE_TAG
 artifacts:
   files:
-  - 'aws/Dockerrun.aws.json'
+  - 'aws/prod/Dockerrun.aws.json'
   discard-paths: yes

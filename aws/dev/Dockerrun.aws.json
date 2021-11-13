@@ -1,7 +1,7 @@
 {
   "AWSEBDockerrunVersion": "1",
   "Image": {
-    "Name": "668064706315.dkr.ecr.eu-central-1.amazonaws.com/creasury-bot:latest",
+    "Name": "668064706315.dkr.ecr.eu-central-1.amazonaws.com/creasury-bot-dev:latest",
     "Update": "true"
   },
   "Ports": [

@@ -67,7 +67,7 @@ client.on('guildMemberAdd', async member => {
 
     db.addMember(member, usedInvite?.inviter);
 
-    let message = `${getUserTag(member.user)} has joined Creasury community. They were invited by .`;
+    let message = `${getUserTag(member.user)} has joined Creasury community. They were invited by `;
     if (usedInvite) {
       const inviteCount = await db.incrementInvites(usedInvite.inviter, member.guild.id);
       message += `${getUserTag(usedInvite.inviter)}, who just gained 1 point and now has ${inviteCount} ${inviteCount === 1 ? 'point' : 'points'} in total.`;

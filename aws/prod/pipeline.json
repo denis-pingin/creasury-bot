@@ -1,0 +1,104 @@
+{
+    "pipeline": {
+        "name": "creasury-bot-prod",
+        "roleArn": "arn:aws:iam::668064706315:role/service-role/AWSCodePipelineServiceRole-eu-central-1-creasury-bot-dev",
+        "artifactStores": {
+            "eu-central-1": {
+                "type": "S3",
+                "location": "codepipeline-eu-central-1-640600088329"
+            },
+            "eu-west-3": {
+                "type": "S3",
+                "location": "codepipeline-eu-west-3-853888895328"
+            }
+        },
+        "stages": [
+            {
+                "name": "Source",
+                "actions": [
+                    {
+                        "name": "Source",
+                        "actionTypeId": {
+                            "category": "Source",
+                            "owner": "AWS",
+                            "provider": "CodeStarSourceConnection",
+                            "version": "1"
+                        },
+                        "runOrder": 1,
+                        "configuration": {
+                            "BranchName": "master",
+                            "ConnectionArn": "arn:aws:codestar-connections:eu-central-1:668064706315:connection/2f7da308-cab4-4d29-b85b-373bf1f1a945",
+                            "FullRepositoryId": "creasury/creasury-bot",
+                            "OutputArtifactFormat": "CODE_ZIP"
+                        },
+                        "outputArtifacts": [
+                            {
+                                "name": "SourceArtifact"
+                            }
+                        ],
+                        "inputArtifacts": [],
+                        "region": "eu-central-1",
+                        "namespace": "SourceVariables"
+                    }
+                ]
+            },
+            {
+                "name": "Build",
+                "actions": [
+                    {
+                        "name": "Build",
+                        "actionTypeId": {
+                            "category": "Build",
+                            "owner": "AWS",
+                            "provider": "CodeBuild",
+                            "version": "1"
+                        },
+                        "runOrder": 1,
+                        "configuration": {
+                            "ProjectName": "creasury-bot-build-prod"
+                        },
+                        "outputArtifacts": [
+                            {
+                                "name": "BuildArtifact"
+                            }
+                        ],
+                        "inputArtifacts": [
+                            {
+                                "name": "SourceArtifact"
+                            }
+                        ],
+                        "region": "eu-central-1",
+                        "namespace": "BuildVariables"
+                    }
+                ]
+            },
+            {
+                "name": "Deploy",
+                "actions": [
+                    {
+                        "name": "Deploy",
+                        "actionTypeId": {
+                            "category": "Deploy",
+                            "owner": "AWS",
+                            "provider": "ElasticBeanstalk",
+                            "version": "1"
+                        },
+                        "runOrder": 1,
+                        "configuration": {
+                            "ApplicationName": "creasury-bot",
+                            "EnvironmentName": "creasury-bot-prod-env"
+                        },
+                        "outputArtifacts": [],
+                        "inputArtifacts": [
+                            {
+                                "name": "BuildArtifact"
+                            }
+                        ],
+                        "region": "eu-west-3",
+                        "namespace": "DeployVariables"
+                    }
+                ]
+            }
+        ]
+    }
+}

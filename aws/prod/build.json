@@ -1,0 +1,40 @@
+{
+  "name": "creasury-bot-build-prod",
+  "source": {
+    "type": "CODEPIPELINE",
+    "insecureSsl": false
+  },
+  "secondarySourceVersions": [],
+  "artifacts": {
+    "type": "CODEPIPELINE",
+    "name": "creasury-bot-build-prod",
+    "packaging": "NONE",
+    "encryptionDisabled": false
+  },
+  "cache": {
+    "type": "NO_CACHE"
+  },
+  "environment": {
+    "type": "LINUX_CONTAINER",
+    "image": "aws/codebuild/standard:5.0",
+    "computeType": "BUILD_GENERAL1_SMALL",
+    "environmentVariables": [],
+    "privilegedMode": true,
+    "imagePullCredentialsType": "CODEBUILD"
+  },
+  "serviceRole": "arn:aws:iam::668064706315:role/service-role/codebuild-creasury-bot-build-service-role",
+  "timeoutInMinutes": 60,
+  "queuedTimeoutInMinutes": 480,
+  "encryptionKey": "arn:aws:kms:eu-central-1:668064706315:alias/aws/s3",
+  "tags": [],
+  "badgeEnabled": false,
+  "logsConfig": {
+    "cloudWatchLogs": {
+      "status": "ENABLED"
+    },
+    "s3Logs": {
+      "status": "DISABLED",
+      "encryptionDisabled": false
+    }
+  }
+}
