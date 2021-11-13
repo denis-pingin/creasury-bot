@@ -2,6 +2,7 @@
   "name": "creasury-bot-build-prod",
   "source": {
     "type": "CODEPIPELINE",
+    "buildspec": "buildspec-prod.yml",
     "insecureSsl": false
   },
   "secondarySourceVersions": [],
