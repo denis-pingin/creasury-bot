@@ -5,6 +5,8 @@ import * as fs from 'fs';
 import * as db from './db';
 import { getUserTag } from './util';
 
+console.log(`Creasury Bot is starting for guild: ${config.guildId}`);
+
 const client = new Client({
   intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_BANS, Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS, Intents.FLAGS.GUILD_INTEGRATIONS, Intents.FLAGS.GUILD_WEBHOOKS, Intents.FLAGS.GUILD_INVITES, Intents.FLAGS.GUILD_VOICE_STATES, Intents.FLAGS.GUILD_PRESENCES, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILD_MESSAGE_TYPING, Intents.FLAGS.DIRECT_MESSAGES, Intents.FLAGS.DIRECT_MESSAGE_REACTIONS, Intents.FLAGS.DIRECT_MESSAGE_TYPING],
   partials: ['MESSAGE', 'CHANNEL', 'REACTION'],
@@ -22,19 +24,21 @@ const guildInvites = new Map();
 client.once('ready', () => {
   try {
     console.log('Creasury Bot ready!');
-    client.guilds.cache.forEach(guild => {
-      guild.invites.fetch()
-        .then(invites => {
-          const codeUses = new Map();
-          invites.each(inv => codeUses.set(inv.code, inv.uses));
+    client.guilds.cache
+      .filter(guild => guild.id === config.guildId)
+      .forEach(guild => {
+        guild.invites.fetch()
+          .then(invites => {
+            const codeUses = new Map();
+            invites.each(inv => codeUses.set(inv.code, inv.uses));
 
-          guildInvites.set(guild.id, codeUses);
-          console.log(`Invites cached for guild ${guild.id}`);
-        })
-        .catch(err => {
-          console.log('OnReady Error:', err);
-        });
-    });
+            guildInvites.set(guild.id, codeUses);
+            console.log('Invites cached');
+          })
+          .catch(err => {
+            console.log('OnReady Error:', err);
+          });
+      });
   } catch (err) {
     console.log('OnReady Error:', err);
   }
@@ -42,6 +46,8 @@ client.once('ready', () => {
 
 client.on('inviteCreate', async invite => {
   try {
+    if (invite.guild.id !== config.guildId) return;
+
     console.log('New invite link created');
     const invites = await invite.guild.invites.fetch();
 
@@ -56,6 +62,8 @@ client.on('inviteCreate', async invite => {
 
 client.on('guildMemberAdd', async member => {
   try {
+    if (member.guild.id !== config.guildId) return;
+
     console.log(`Member added: ${getUserTag(member.user)}`);
 
     const cachedInvites = guildInvites.get(member.guild.id);
@@ -67,9 +75,9 @@ client.on('guildMemberAdd', async member => {
 
     db.addMember(member, usedInvite?.inviter);
 
-    let message = `${getUserTag(member.user)} has joined Creasury community. They were invited by `;
+    let message = `${getUserTag(member.user)} has joined the Creasury community. They were invited by `;
     if (usedInvite) {
-      const inviteCount = await db.incrementInvites(usedInvite.inviter, member.guild.id);
+      const inviteCount = await db.incrementGlobalInvites(usedInvite.inviter, member.guild.id);
       message += `${getUserTag(usedInvite.inviter)}, who just gained 1 point and now has ${inviteCount} ${inviteCount === 1 ? 'point' : 'points'} in total.`;
     } else {
       message += 'some mysterious force, which some of us might want to investigate.';
@@ -84,15 +92,17 @@ client.on('guildMemberAdd', async member => {
 
 client.on('guildMemberRemove', async member => {
   try {
+    if (member.guild.id !== config.guildId) return;
+
     console.log(`Member removed: ${getUserTag(member.user)}`);
 
     db.removeMember(member);
 
-    let message = `${getUserTag(member.user)} has left Creasury community. They were invited by `;
+    let message = `${getUserTag(member.user)} has left the Creasury community. They were invited by `;
 
     const inviter = await db.getInviter(member);
     if (inviter) {
-      const inviteCount = await db.decrementInvites(inviter, member.guild.id);
+      const inviteCount = await db.decrementGlobalInvites(inviter, member.guild.id);
       message += `${getUserTag(inviter)}, who just lost 1 point and now has ${inviteCount} ${inviteCount === 1 ? 'point' : 'points'} in total.`;
     } else {
       message += 'some mysterious force, which some of us might want to investigate.';
@@ -106,16 +116,19 @@ client.on('guildMemberRemove', async member => {
 
 client.on('interactionCreate', async interaction => {
   if (!interaction.isCommand()) return;
+  if (interaction.guild && interaction.guild.id !== config.guildId) return;
 
   const command = client.commands.get(interaction.commandName);
 
-  if (!command) return;
-
-  try {
-    await command.execute(interaction);
-  } catch (error) {
-    console.error(error);
-    await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+  if (!command) {
+    console.log(`Warn: command not found: ${interaction.commandName}`);
+  } else {
+    try {
+      await command.execute(interaction);
+    } catch (error) {
+      console.error(error);
+      await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+    }
   }
 });
 

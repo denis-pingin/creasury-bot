@@ -11,11 +11,14 @@ async function getDatabase() {
   return client.db(config.dbName);
 }
 
-getDatabase();
+getDatabase().then(db => {
+  db.createIndex('members', { 'id': 1, 'guildId': 1 }, { unique: true, name: 'ids' });
+  db.createIndex('memberCounters', { 'id': 1, 'guildId': 1 }, { unique: true, name: 'ids' });
+});
 
 async function getInviter(member) {
   const database = await getDatabase();
-  const invitesCollection = database.collection('invites');
+  const invitesCollection = database.collection('members');
 
   const result = await invitesCollection.findOne({ id: member.user.id, guildId: member.guild.id });
   if (result?.inviter) {
@@ -38,20 +41,42 @@ async function addMember(member, inviter) {
     timestamp: new Date(),
   });
 
-  const invitesCollection = database.collection('invites');
-  await invitesCollection.updateOne({ id: member.user.id, guildId: member.guild.id }, {
-    $set: {
-      id: member.user.id,
-      guildId: member.guild.id,
-      user: member.user,
-      inviter: inviter,
-      inviteTimestamp: new Date(),
-    },
-  }, {
-    upsert: true,
-    returnDocument: ReturnDocument.AFTER,
-  });
-  console.log(`A new member was added: ${getUserTag(member.user)}`);
+  const invitesCollection = database.collection('members');
+  const knownMember = await invitesCollection.findOne({ id: member.user.id, guildId: member.guild.id });
+  if (knownMember) {
+    await invitesCollection.updateOne({ id: member.user.id, guildId: member.guild.id }, {
+      $set: {
+        id: member.user.id,
+        guildId: member.guild.id,
+        user: member.user,
+        originalInviter: knownMember.originalInviter,
+        originalInviteTimestamp: knownMember.originalInviteTimestamp,
+        inviter: inviter,
+        inviteTimestamp: new Date(),
+      },
+    }, {
+      upsert: true,
+      returnDocument: ReturnDocument.AFTER,
+    });
+    console.log(`A rejoined member ${getUserTag(member.user)} has originally joined on ${knownMember.originalInviteTimestamp} and were invited by ${getUserTag(knownMember.originalInviter)}`);
+  } else {
+    const timestamp = new Date();
+    await invitesCollection.updateOne({ id: member.user.id, guildId: member.guild.id }, {
+      $set: {
+        id: member.user.id,
+        guildId: member.guild.id,
+        user: member.user,
+        originalInviter: inviter,
+        originalInviteTimestamp: timestamp,
+        inviter: inviter,
+        inviteTimestamp: timestamp,
+      },
+    }, {
+      upsert: true,
+      returnDocument: ReturnDocument.AFTER,
+    });
+    console.log(`A new member was added: ${getUserTag(member.user)}`);
+  }
 }
 
 async function removeMember(member) {
@@ -65,7 +90,7 @@ async function removeMember(member) {
     timestamp: new Date(),
   });
 
-  const invitesCollection = database.collection('invites');
+  const invitesCollection = database.collection('members');
   await invitesCollection.findOneAndUpdate({ id: member.user.id, guildId: member.guild.id }, {
     $set: {
       removed: true,
@@ -78,42 +103,32 @@ async function removeMember(member) {
   console.log(`Member ${getUserTag(member.user)} was marked as removed.`);
 }
 
-async function incrementInvites(inviter, guildId) {
-  const database = await getDatabase();
-  const inviteCountCollection = database.collection('inviteCount');
+async function incrementGlobalInvites(inviter, guildId) {
+  const result = await updateGlobalInvitesCounter(inviter, guildId, 1);
+  console.log(`Invite count incremented for user ${getUserTag(inviter)}, they now have ${result.value.global.invites} invites.`);
+  return result.value.global.invites;
+}
 
-  const result = await inviteCountCollection.findOneAndUpdate({ id: inviter.id, guildId: guildId }, {
+async function decrementGlobalInvites(inviter, guildId) {
+  const result = await updateGlobalInvitesCounter(inviter, guildId, -1);
+  console.log(`Invite count decremented for user ${getUserTag(inviter)}, they now have ${result.value.global.invites} invites.`);
+  return result.value.global.invites;
+}
+
+async function updateGlobalInvitesCounter(inviter, guildId, increment) {
+  const database = await getDatabase();
+  const inviteCountCollection = database.collection('memberCounters');
+  return await inviteCountCollection.findOneAndUpdate({ id: inviter.id, guildId: guildId }, {
     $set: {
       id: inviter.id,
       guildId: guildId,
       lastUpdated: new Date(),
     },
-    $inc: { 'invites': 1 },
+    $inc: { 'global.invites': increment },
   }, {
     upsert: true,
     returnDocument: ReturnDocument.AFTER,
   });
-  console.log(`Invite count incremented for user ${getUserTag(inviter)}, they now have ${result.value.invites} invites.`);
-  return result.value.invites;
 }
 
-async function decrementInvites(inviter, guildId) {
-  const database = await getDatabase();
-  const inviteCountCollection = database.collection('inviteCount');
-
-  const result = await inviteCountCollection.findOneAndUpdate({ id: inviter.id, guildId: guildId }, {
-    $set: {
-      id: inviter.id,
-      guildId: guildId,
-      lastUpdated: new Date(),
-    },
-    $inc: { 'invites': -1 },
-  }, {
-    upsert: true,
-    returnDocument: ReturnDocument.AFTER,
-  });
-  console.log(`Invite count decremented for user ${getUserTag(inviter)}, they now have ${result.value.invites} invites.`);
-  return result.value.invites;
-}
-
-export { getInviter, addMember, removeMember, incrementInvites, decrementInvites };
+export { getInviter, addMember, removeMember, incrementGlobalInvites, decrementGlobalInvites };
