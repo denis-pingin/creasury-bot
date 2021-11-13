@@ -25,11 +25,11 @@ client.once('ready', () => {
     client.guilds.cache.forEach(guild => {
       guild.invites.fetch()
         .then(invites => {
-          console.log('Invites cached');
           const codeUses = new Map();
           invites.each(inv => codeUses.set(inv.code, inv.uses));
 
           guildInvites.set(guild.id, codeUses);
+          console.log(`Invites cached for guild ${guild.id}`);
         })
         .catch(err => {
           console.log('OnReady Error:', err);

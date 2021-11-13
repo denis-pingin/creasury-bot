@@ -28,8 +28,17 @@ async function getInviter(member) {
 
 async function addMember(member, inviter) {
   const database = await getDatabase();
-  const invitesCollection = database.collection('invites');
 
+  const eventsCollection = database.collection('events');
+  await eventsCollection.insertOne({
+    type: 'join',
+    guildId: member.guild.id,
+    user: member.user,
+    inviter: inviter,
+    timestamp: new Date(),
+  });
+
+  const invitesCollection = database.collection('invites');
   await invitesCollection.updateOne({ id: member.user.id, guildId: member.guild.id }, {
     $set: {
       id: member.user.id,
@@ -47,8 +56,16 @@ async function addMember(member, inviter) {
 
 async function removeMember(member) {
   const database = await getDatabase();
-  const invitesCollection = database.collection('invites');
 
+  const eventsCollection = database.collection('events');
+  await eventsCollection.insertOne({
+    type: 'leave',
+    guildId: member.guild.id,
+    user: member.user,
+    timestamp: new Date(),
+  });
+
+  const invitesCollection = database.collection('invites');
   await invitesCollection.findOneAndUpdate({ id: member.user.id, guildId: member.guild.id }, {
     $set: {
       removed: true,
