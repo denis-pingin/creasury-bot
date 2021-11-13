@@ -3,7 +3,6 @@ import { config } from './config';
 import { MongoClient, ReturnDocument } from 'mongodb';
 import { getUserTag } from './util';
 
-// Replace the uri string with your MongoDB deployment's connection string.
 const client = new MongoClient(config.dbConnectionString);
 
 async function getDatabase() {
@@ -42,7 +41,7 @@ async function getInviter(member) {
   }
 }
 
-async function addMember(member, inviter) {
+async function addMember(member, inviter, fake) {
   const database = await getDatabase();
 
   const eventsCollection = database.collection('events');
@@ -51,6 +50,7 @@ async function addMember(member, inviter) {
     guildId: member.guild.id,
     user: member.user,
     inviter: inviter,
+    fake: fake,
     timestamp: new Date(),
   });
 
@@ -80,6 +80,7 @@ async function addMember(member, inviter) {
         originalInviteTimestamp: timestamp,
         inviter: inviter,
         inviteTimestamp: timestamp,
+        fake: fake,
       },
     }, {
       upsert: true,
@@ -87,7 +88,7 @@ async function addMember(member, inviter) {
     });
     console.log(`A new member was added: ${getUserTag(member.user)}`);
   }
-  return newMember.value;
+  return { member: newMember.value, rejoin: !!knownMember };
 }
 
 async function removeMember(member) {
@@ -102,7 +103,7 @@ async function removeMember(member) {
   });
 
   const invitesCollection = database.collection('members');
-  await invitesCollection.updateOne({ id: member.user.id, guildId: member.guild.id }, {
+  const result = await invitesCollection.findOneAndUpdate({ id: member.user.id, guildId: member.guild.id }, {
     $set: {
       removed: true,
       removeTimestamp: new Date(),
@@ -112,34 +113,24 @@ async function removeMember(member) {
     returnDocument: ReturnDocument.AFTER,
   });
   console.log(`Member ${getUserTag(member.user)} was marked as removed.`);
+  return { member: result.value };
 }
 
-async function incrementGlobalInvites(inviter, guildId) {
-  const result = await updateGlobalInvitesCounter(inviter, guildId, 1);
-  console.log(`Invite count incremented for user ${getUserTag(inviter)}, they now have ${result.value.global.invites} invites.`);
-  return result.value.global.invites;
-}
-
-async function decrementGlobalInvites(inviter, guildId) {
-  const result = await updateGlobalInvitesCounter(inviter, guildId, -1);
-  console.log(`Invite count decremented for user ${getUserTag(inviter)}, they now have ${result.value.global.invites} invites.`);
-  return result.value.global.invites;
-}
-
-async function updateGlobalInvitesCounter(inviter, guildId, increment) {
+async function updateGlobalCounter(name, user, guildId, increment) {
   const database = await getDatabase();
   const inviteCountCollection = database.collection('memberCounters');
-  return await inviteCountCollection.findOneAndUpdate({ id: inviter.id, guildId: guildId }, {
+  const result = await inviteCountCollection.findOneAndUpdate({ id: user.id, guildId: guildId }, {
     $set: {
-      id: inviter.id,
+      id: user.id,
       guildId: guildId,
       lastUpdated: new Date(),
     },
-    $inc: { 'global.invites': increment },
+    $inc: { [`global.${name}`]: increment },
   }, {
     upsert: true,
     returnDocument: ReturnDocument.AFTER,
   });
+  return result.value.global[name];
 }
 
-export { getOriginalInviter, getInviter, addMember, removeMember, incrementGlobalInvites, decrementGlobalInvites };
+export { getOriginalInviter, getInviter, addMember, removeMember, updateGlobalCounter };
