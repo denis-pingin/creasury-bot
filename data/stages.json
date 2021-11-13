@@ -1,0 +1,267 @@
+[
+  {
+    "id": "newborn-butterflies-stage-1",
+    "order": 0,
+    "event": "Newborn Butterflies",
+    "stage": "Stage 1",
+    "started": true,
+    "startedAt": 1636833847,
+    "ended": true,
+    "endedAt": 1636834847,
+    "active": false,
+    "goals": {
+      "memberCount": 1000
+    },
+    "rewards": {
+      "3": [
+        {
+          "type": "achievement",
+          "id": "pioneer-champion-1",
+          "distribution": "guaranteed",
+          "supply": -1
+        },
+        {
+          "type": "creasury-butterfly",
+          "id": "creasury-butterfly-1",
+          "distribution": "guaranteed",
+          "supply": 1
+        },
+        {
+          "type": "creasury-butterfly",
+          "id": "creasury-butterfly-2",
+          "distribution": "guaranteed",
+          "supply": 1
+        },
+        {
+          "type": "creasury-butterfly",
+          "id": "creasury-butterfly-3",
+          "distribution": "guaranteed",
+          "supply": 1
+        },
+        {
+          "type": "whitelist-spot",
+          "id": "early-presale",
+          "distribution": "guaranteed",
+          "supply": 3
+        }
+      ],
+      "2": [
+        {
+          "type": "achievement",
+          "id": "pioneer-master-1",
+          "distribution": "guaranteed",
+          "supply": -1
+        },
+        {
+          "type": "creasury-butterfly",
+          "id": "creasury-butterfly-4",
+          "distribution": "weighted-lottery",
+          "supply": 1
+        },
+        {
+          "type": "whitelist-spot",
+          "id": "early-presale",
+          "distribution": "weighted-lottery",
+          "supply": 2
+        }
+      ],
+      "1": [
+        {
+          "type": "achievement",
+          "id": "pioneer-rookie-1",
+          "distribution": "guaranteed",
+          "supply": -1
+        },
+        {
+          "type": "creasury-butterfly",
+          "id": "creasury-butterfly-5",
+          "distribution": "simple-lottery",
+          "supply": 1
+        },
+        {
+          "type": "whitelist-spot",
+          "id": "early-presale",
+          "distribution": "simple-lottery",
+          "supply": 1
+        }
+      ]
+    },
+    "results": [
+      {
+        "memberId": 1,
+        "points": 10,
+        "rank": 1,
+        "level": 3,
+        "rewards": [
+          {
+            "type": "achievement",
+            "id": "pioneer-champion-1",
+            "distribution": "guaranteed"
+          },
+          {
+            "type": "creasury-butterfly",
+            "id": "creasury-butterfly-1",
+            "distribution": "guaranteed"
+          },
+          {
+            "type": "whitelist-spot",
+            "id": "early-presale",
+            "distribution": "guaranteed"
+          }
+        ]
+      },
+      {
+        "memberId": 2,
+        "points": 7,
+        "rank": 2,
+        "level": 3,
+        "rewards": [
+          {
+            "type": "achievement",
+            "id": "pioneer-champion-1",
+            "distribution": "guaranteed"
+          },
+          {
+            "type": "creasury-butterfly",
+            "id": "creasury-butterfly-2",
+            "distribution": "guaranteed"
+          },
+          {
+            "type": "whitelist-spot",
+            "id": "early-presale",
+            "distribution": "guaranteed"
+          }
+        ]
+      },
+      {
+        "memberId": 3,
+        "points": 6,
+        "rank": 3,
+        "level": 3,
+        "rewards": [
+          {
+            "type": "achievement",
+            "id": "pioneer-champion-1",
+            "distribution": "guaranteed"
+          },
+          {
+            "type": "creasury-butterfly",
+            "id": "creasury-butterfly-3",
+            "distribution": "guaranteed"
+          },
+          {
+            "type": "whitelist-spot",
+            "id": "early-presale",
+            "distribution": "guaranteed"
+          }
+        ]
+      },
+      {
+        "memberId": 4,
+        "points": 5,
+        "rank": 4,
+        "level": 2,
+        "rewards": [
+          {
+            "type": "achievement",
+            "id": "pioneer-master-1"
+          },
+          {
+            "type": "whitelist-spot",
+            "id": "early-presale",
+            "distribution": "weighted-lottery",
+            "distributionDetails": {
+              "totalTickets": 1100,
+              "winningTicket": 200,
+              "randomSeed": "0x0008"
+            }
+          }
+        ]
+      },
+      {
+        "memberId": 5,
+        "points": 4,
+        "rank": 5,
+        "level": 2,
+        "rewards": [
+          {
+            "type": "achievement",
+            "id": "pioneer-master-1"
+          },
+          {
+            "type": "creasury-butterfly",
+            "id": "creasury-butterfly-4",
+            "distribution": "weighted-lottery",
+            "distributionDetails": {
+              "totalTickets": 1000,
+              "winningTicket": 150,
+              "randomSeed": "0x0001"
+            }
+          }
+        ]
+      },
+      {
+        "memberId": 6,
+        "points": 3,
+        "rank": 6,
+        "level": 1,
+        "rewards": [
+          {
+            "type": "achievement",
+            "id": "pioneer-rookie-1"
+          },
+          {
+            "type": "creasury-butterfly",
+            "id": "creasury-butterfly-5",
+            "distribution": "simple-lottery",
+            "distributionDetails": {
+              "totalTickets": 2000,
+              "winningTicket": 750,
+              "randomSeed": "0x0002"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "newborn-butterflies-stage-2",
+    "order": 1,
+    "event": "Newborn Butterflies",
+    "stage": "Stage 2",
+    "started": true,
+    "startedAt": 1636835847,
+    "ended": false,
+    "active": true,
+    "goals": {
+      "memberCount": 2500
+    }
+  },
+  {
+    "id": "butterfly-family-stage-1",
+    "order": 2,
+    "event": "Butterfly Family",
+    "stage": "Stage 1",
+    "started": false,
+    "ended": false,
+    "active": false,
+    "goals": {
+      "memberCount": 5000,
+      "retweets": 250
+    }
+  },
+  {
+    "id": "butterfly-family-stage-2",
+    "order": 3,
+    "event": "Butterfly Family",
+    "stage": "Stage 2",
+    "started": false,
+    "ended": false,
+    "active": false,
+    "goals": {
+      "memberCount": 7500,
+      "retweets": 500,
+      "followers": 250
+    }
+  }
+]
