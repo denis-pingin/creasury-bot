@@ -20,68 +20,88 @@ for (const file of commandFiles) {
 const guildInvites = new Map();
 
 client.once('ready', () => {
-  console.log('Creasury Bot ready!');
-  client.guilds.cache.forEach(guild => {
-    guild.invites.fetch()
-      .then(invites => {
-        console.log('Invites cached');
-        const codeUses = new Map();
-        invites.each(inv => codeUses.set(inv.code, inv.uses));
+  try {
+    console.log('Creasury Bot ready!');
+    client.guilds.cache.forEach(guild => {
+      guild.invites.fetch()
+        .then(invites => {
+          console.log('Invites cached');
+          const codeUses = new Map();
+          invites.each(inv => codeUses.set(inv.code, inv.uses));
 
-        guildInvites.set(guild.id, codeUses);
-      })
-      .catch(err => {
-        console.log('OnReady Error:', err);
-      });
-  });
+          guildInvites.set(guild.id, codeUses);
+        })
+        .catch(err => {
+          console.log('OnReady Error:', err);
+        });
+    });
+  } catch (err) {
+    console.log('OnReady Error:', err);
+  }
 });
 
 client.on('inviteCreate', async invite => {
-  console.log('New invite link created');
-  const invites = await invite.guild.invites.fetch();
+  try {
+    console.log('New invite link created');
+    const invites = await invite.guild.invites.fetch();
 
-  const codeUses = new Map();
-  invites.each(inv => codeUses.set(inv.code, inv.uses));
+    const codeUses = new Map();
+    invites.each(inv => codeUses.set(inv.code, inv.uses));
 
-  guildInvites.set(invite.guild.id, codeUses);
+    guildInvites.set(invite.guild.id, codeUses);
+  } catch (err) {
+    console.log('OnInviteCreate Error:', err);
+  }
 });
 
 client.on('guildMemberAdd', async member => {
-  console.log(`Member added: ${getUserTag(member.user)}`);
-  const cachedInvites = guildInvites.get(member.guild.id);
-  const newInvites = await member.guild.invites.fetch();
   try {
-    const usedInvite = newInvites.find(inv => cachedInvites.get(inv.code) < inv.uses);
-    if (!usedInvite) {
-      console.log('Warning: inviter could not be found', [...newInvites.values()].map(inv => inv.code), [...cachedInvites.keys()]);
-    } else {
-      const message = `User ${getUserTag(member.user)} joined the server, they were invited by ${getUserTag(usedInvite.inviter)}.`;
-      sendInviteMessage(message);
+    console.log(`Member added: ${getUserTag(member.user)}`);
 
-      db.addMember(member, usedInvite.inviter);
-      db.incrementInvites(usedInvite.inviter, member.guild.id);
+    const cachedInvites = guildInvites.get(member.guild.id);
+    const newInvites = await member.guild.invites.fetch();
+
+    const usedInvite = newInvites.find(inv => cachedInvites.get(inv.code) < inv.uses);
+    newInvites.each(inv => cachedInvites.set(inv.code, inv.uses));
+    guildInvites.set(member.guild.id, cachedInvites);
+
+    db.addMember(member, usedInvite?.inviter);
+
+    let message = `${getUserTag(member.user)} has joined Creasury community. They were invited by .`;
+    if (usedInvite) {
+      const inviteCount = await db.incrementInvites(usedInvite.inviter, member.guild.id);
+      message += `${getUserTag(usedInvite.inviter)}, who just gained 1 point and is now at ${inviteCount} } ${inviteCount === 1 ? 'point' : 'points'}.`;
+    } else {
+      message += 'some mysterious force, which some of us might want to investigate.';
+      console.log('Warning: inviter could not be found', [...newInvites.values()].map(inv => inv.code), [...cachedInvites.keys()]);
     }
+
+    sendInviteMessage(message);
   } catch (err) {
     console.log('OnGuildMemberAdd Error:', err);
   }
-
-  newInvites.each(inv => cachedInvites.set(inv.code, inv.uses));
-  guildInvites.set(member.guild.id, cachedInvites);
 });
 
 client.on('guildMemberRemove', async member => {
-  console.log(`Member removed: ${getUserTag(member.user)}`);
-  const inviter = await db.getInviter(member);
+  try {
+    console.log(`Member removed: ${getUserTag(member.user)}`);
 
-  let message = `User ${getUserTag(member.user)} left the server, they were invited by `;
-  if (inviter) {
     db.removeMember(member);
-    db.decrementInvites(inviter, member.guild.id);
-    message += `${getUserTag(inviter)}.`;
-  } else {
-    message += 'some mysterious force.';
+
+    let message = `${getUserTag(member.user)} has left Creasury community. They were invited by `;
+
+    const inviter = await db.getInviter(member);
+    if (inviter) {
+      const inviteCount = await db.decrementInvites(inviter, member.guild.id);
+      message += `${getUserTag(inviter)}, who just lost 1 point and is currently at ${inviteCount} ${inviteCount === 1 ? 'point' : 'points'}.`;
+    } else {
+      message += 'some mysterious force, which some of us might want to investigate.';
+    }
+
+    sendInviteMessage(message);
+  } catch (err) {
+    console.log('OnGuildMemberRemove Error:', err);
   }
-  sendInviteMessage(message);
 });
 
 client.on('interactionCreate', async interaction => {

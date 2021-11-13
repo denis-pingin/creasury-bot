@@ -11,6 +11,8 @@ async function getDatabase() {
   return client.db(config.dbName);
 }
 
+getDatabase();
+
 async function getInviter(member) {
   const database = await getDatabase();
   const invitesCollection = database.collection('invites');
@@ -75,6 +77,7 @@ async function incrementInvites(inviter, guildId) {
     returnDocument: ReturnDocument.AFTER,
   });
   console.log(`Invite count incremented for user ${getUserTag(inviter)}, they now have ${result.value.invites} invites.`);
+  return result.value.invites;
 }
 
 async function decrementInvites(inviter, guildId) {
@@ -93,6 +96,7 @@ async function decrementInvites(inviter, guildId) {
     returnDocument: ReturnDocument.AFTER,
   });
   console.log(`Invite count decremented for user ${getUserTag(inviter)}, they now have ${result.value.invites} invites.`);
+  return result.value.invites;
 }
 
 export { getInviter, addMember, removeMember, incrementInvites, decrementInvites };
