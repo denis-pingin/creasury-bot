@@ -16,9 +16,13 @@ export default async function handleGuildMemberAdd(client, member, inviter) {
   const stageMessage = await handleStagePoints(client, addMemberResult);
 
   let message = `${getUserTag(member.user)} has ${addMemberResult.rejoin ? 're-' : ''}joined the Creasury community.`;
-  message = `${message}\nThey were originally invited by ${getInviterTag(addMemberResult.member.originalInviter)}`;
-  if (addMemberResult.rejoin && addMemberResult.member.inviter.id !== addMemberResult.member.originalInviter.id) {
-    message = `${message} and now invited by ${getInviterTag(addMemberResult.member.inviter)}`;
+  if (addMemberResult.rejoin) {
+    message = `${message}\nThey were originally invited by ${getInviterTag(addMemberResult.member.originalInviter)}`;
+    if (addMemberResult.member.inviter.id !== addMemberResult.member.originalInviter.id) {
+      message = `${message} and now invited by ${getInviterTag(addMemberResult.member.inviter)}`;
+    }
+  } else {
+    message = `${message}\nThey were invited by ${getInviterTag(addMemberResult.member.originalInviter)}`;
   }
   message = `${message}.`;
 
@@ -28,10 +32,10 @@ export default async function handleGuildMemberAdd(client, member, inviter) {
 async function handleGlobalPoints(client, addMemberResult) {
   const originalInviter = addMemberResult.member.originalInviter;
   if (originalInviter) {
-    if (!addMemberResult.member.fake) {
-      await updateGlobalCounterAndLog(client, 'points', originalInviter, addMemberResult.member.guildId, 1);
-    } else {
+    if (addMemberResult.member.fake) {
       await updateGlobalCounterAndLog(client, 'fakes', originalInviter, addMemberResult.member.guildId, 1);
+    } else {
+      await updateGlobalCounterAndLog(client, 'points', originalInviter, addMemberResult.member.guildId, 1);
     }
   } else {
     sendLogMessage(client, `Inviter of user ${getUserTag(addMemberResult.member.user)} is unknown, no global points will be awarded.`);
