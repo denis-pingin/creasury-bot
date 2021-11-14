@@ -104,6 +104,9 @@ async function removeMember(member) {
 
   const result = await database.collection('members').findOneAndUpdate({ id: member.user.id, guildId: member.guild.id }, {
     $set: {
+      id: member.user.id,
+      guildId: member.guild.id,
+      user: member.user,
       removed: true,
       removeTimestamp: new Date(),
     },

@@ -9,7 +9,7 @@ export default async function handleGuildMemberRemove(client, member) {
   await handleGlobalPoints(client, removeMemberResult);
   const stageMessage = await handleStagePoints(client, removeMemberResult);
 
-  let message = `${getUserTag(member.user)} has left the Creasury community :pensive:`;
+  let message = `${getUserTag(member.user)} has left the Creasury community. :pensive:`;
   message = `${message}\nThey were originally invited by ${getInviterTag(removeMemberResult.member.originalInviter)}.`;
 
   sendInviteMessage(client, `${message}\n${stageMessage}`);
@@ -32,7 +32,7 @@ async function handleStagePoints(client, removeMemberResult) {
   let message = '';
   const stage = await db.getActiveStage();
   if (!stage) {
-    sendLogMessage(client, 'No active stage found, won\'t update any points.');
+    sendLogMessage(client, 'No active stage found, won\'t update stage points.');
   } else {
     const originalInviter = removeMemberResult.member.originalInviter;
     if (originalInviter) {
