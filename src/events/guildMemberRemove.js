@@ -42,7 +42,7 @@ async function handleStagePoints(client, removeMemberResult) {
         message = `Minimum account age requirements weren't met (> ${config.minAccountAge} days), won't update stage points.`;
       } else if (originalInviteTimestamp < stage.startedAt) {
         sendLogMessage(client, `User ${getUserTag(removeMemberResult.member.user)} re-joined, they originally joined before the current stage started, won't update stage points.`);
-        message = `${removeMemberResult.member.user} originally joined before the current stage has started, won't update stage points.`;
+        message = `${getUserTag(removeMemberResult.member.user)} originally joined before the current stage has started, won't update stage points.`;
       } else {
         const points = await updateStageCounterAndLog(client, stage.id, 'points', originalInviter, removeMemberResult.member.guildId, -1);
         message = `${getUserTag(removeMemberResult.member.originalInviter)} just lost 1 point and now has ${points} ${points === 1 ? 'point' : 'points'} in total.`;

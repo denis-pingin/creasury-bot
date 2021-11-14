@@ -63,6 +63,7 @@ async function addMember(member, inviter, fake) {
         inviter: inviter,
         inviteTimestamp: new Date(),
         fake: fake,
+        removed: false,
       },
     }, {
       upsert: true,

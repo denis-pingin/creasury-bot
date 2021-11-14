@@ -53,7 +53,7 @@ async function handleStagePoints(client, addMemberResult) {
         const originalInviteTimestamp = addMemberResult.member.originalInviteTimestamp;
         if (originalInviteTimestamp < stage.startedAt) {
           sendLogMessage(client, `User ${getUserTag(addMemberResult.member.user)} re-joined, they originally joined before the current stage started, no points will be awarded.`);
-          message = `${addMemberResult.member.user} originally joined before the current stage has started, ${getUserTag(addMemberResult.member.originalInviter)} won't be awarded any points.`;
+          message = `${getUserTag(addMemberResult.member.user)} originally joined before the current stage has started, ${getUserTag(addMemberResult.member.originalInviter)} won't be awarded any points.`;
         } else {
           const points = await updateStageCounterAndLog(client, stage.id, 'points', originalInviter, addMemberResult.member.guildId, 1);
           message = `${getUserTag(addMemberResult.member.originalInviter)} just gained 1 point and now has ${points} ${points === 1 ? 'point' : 'points'} in total.`;

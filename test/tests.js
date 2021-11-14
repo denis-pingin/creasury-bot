@@ -34,7 +34,7 @@ async function clearData() {
   await database.collection('memberCounters').deleteOne({ id: 2, guildId: 1 });
 }
 
-async function testRegularAddRemove() {
+async function testRegular() {
   await clearData();
 
   await handleGuildMemberAdd(null, member, inviter);
@@ -68,7 +68,7 @@ async function testRegularAddRemove() {
   assert.equal(data[stage].points, 0);
 }
 
-async function testFakeAddRemove() {
+async function testFake() {
   await clearData();
 
   await handleGuildMemberAdd(null, fakeMember, inviter);
@@ -91,7 +91,9 @@ async function testFakeAddRemove() {
 
   data = await database.collection('memberCounters').findOne({ id: 2, guildId: 1 });
   assert.equal(data.global.points, undefined);
+  assert.equal(data.global.fakes, 1);
   assert.equal(data[stage].points, undefined);
+  assert.equal(data[stage].fakes, 1);
 
   await handleGuildMemberRemove(null, fakeMember);
 
@@ -101,12 +103,110 @@ async function testFakeAddRemove() {
 
   data = await database.collection('memberCounters').findOne({ id: 2, guildId: 1 });
   assert.equal(data.global.points, undefined);
+  assert.equal(data.global.fakes, 0);
   assert.equal(data[stage].points, undefined);
+  assert.equal(data[stage].fakes, 0);
+}
+
+async function testRejoin() {
+  await clearData();
+  await handleGuildMemberAdd(null, member, inviter);
+  await handleGuildMemberRemove(null, member);
+  await handleGuildMemberAdd(null, member, inviter);
+
+  const database = await getDatabase();
+  let data = await database.collection('members').findOne({ id: 1, guildId: 1 });
+  assert.equal(data.fake, false);
+  assert.notEqual(data.inviteTimestamp, undefined);
+  assert.notEqual(data.inviter, undefined);
+  assert.equal(data.inviter.id, inviter.id);
+  assert.notEqual(data.originalInviteTimestamp, undefined);
+  assert.notEqual(data.originalInviter, undefined);
+  assert.equal(data.originalInviter.id, inviter.id);
+  assert.notEqual(data.user, undefined);
+  assert.equal(data.user.id, member.user.id);
+  assert.notEqual(data.removeTimestamp, undefined);
+  assert.equal(data.removed, false);
+
+  const prevRemoveTimestamp = data.removeTimestamp;
+
+  data = await database.collection('memberCounters').findOne({ id: 2, guildId: 1 });
+  assert.equal(data.global.points, 1);
+  assert.equal(data[stage].points, 1);
+
+  data = await database.collection('memberCounters').findOne({ id: 1, guildId: 1 });
+  assert.equal(data.global.rejoins, 1);
+
+  await handleGuildMemberRemove(null, member);
+
+  data = await database.collection('members').findOne({ id: 1, guildId: 1 });
+  assert.notEqual(data.removeTimestamp, prevRemoveTimestamp);
+  assert.equal(data.removed, true);
+
+  data = await database.collection('memberCounters').findOne({ id: 2, guildId: 1 });
+  assert.equal(data.global.points, 0);
+  assert.equal(data[stage].points, 0);
+}
+
+async function testNoInviter() {
+  await clearData();
+
+  await handleGuildMemberAdd(null, member, undefined);
+
+  const database = await getDatabase();
+  let data = await database.collection('members').findOne({ id: 1, guildId: 1 });
+  assert.equal(data.fake, false);
+  assert.notEqual(data.inviteTimestamp, undefined);
+  assert.equal(data.inviter, null);
+  assert.notEqual(data.originalInviteTimestamp, undefined);
+  assert.equal(data.originalInviter, null);
+  assert.notEqual(data.user, undefined);
+  assert.equal(data.user.id, member.user.id);
+  assert.equal(data.removeTimestamp, undefined);
+  assert.equal(data.removed, undefined);
+
+  data = await database.collection('memberCounters').findOne({ id: 2, guildId: 1 });
+  assert.equal(data, null);
+
+  await handleGuildMemberRemove(null, member);
+
+  data = await database.collection('memberCounters').findOne({ id: 2, guildId: 1 });
+  assert.equal(data, null);
+}
+
+async function testJoinedBeforeStageStart() {
+  await clearData();
+
+  await handleGuildMemberAdd(null, member, inviter);
+
+  const database = await getDatabase();
+  await database.collection('members').findOneAndUpdate({ id: 1, guildId: 1 }, { $set: { originalInviteTimestamp: 0 } });
+
+  await handleGuildMemberRemove(null, member);
+
+  let data = await database.collection('members').findOne({ id: 1, guildId: 1 });
+  assert.notEqual(data.removeTimestamp, undefined);
+  assert.equal(data.removed, true);
+
+  data = await database.collection('memberCounters').findOne({ id: 2, guildId: 1 });
+  assert.equal(data.global.points, 0);
+  assert.equal(data[stage].points, 1);
+
+  await handleGuildMemberAdd(null, member, inviter);
+
+  data = await database.collection('memberCounters').findOne({ id: 2, guildId: 1 });
+  assert.equal(data.global.points, 1);
+  assert.equal(data[stage].points, 1);
 }
 
 async function runTests() {
-  await testRegularAddRemove();
-  await testFakeAddRemove();
+  await testRegular();
+  await testFake();
+  await testRejoin();
+  await testNoInviter();
+  await testJoinedBeforeStageStart();
+
+  await clearData();
 
   console.log('Tests finished!');
   process.exit(0);
