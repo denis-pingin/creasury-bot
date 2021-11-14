@@ -32,6 +32,6 @@ export function getInviterTag(user) {
 }
 
 export function getUserTag(user) {
-  if (!user) return 'unknown user';
+  if (!user) return 'unknown member';
   return `<@${user.id}>`;
 }

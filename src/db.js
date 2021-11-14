@@ -41,17 +41,44 @@ async function getInviter(member) {
   }
 }
 
-async function addMember(member, inviter, fake) {
+export async function getStagePoints(userId, guildId) {
   const database = await getDatabase();
+  const stage = await getActiveStage();
+  const field = `${stage.id}.points`;
+  if (stage) {
+    const stagePointsResult = await database.collection('memberCounters').findOne({ id: userId, guildId: guildId }, { projection: { [field]: true } });
+    if (stagePointsResult) {
+      return getObjectFieldValue(field, stagePointsResult);
+    }
+  }
+}
 
+export async function addJoinEvent(member, inviter, fake, stagePoints) {
+  const database = await getDatabase();
+  const timestamp = new Date();
   await database.collection('events').insertOne({
     type: 'join',
     guildId: member.guild.id,
     user: member.user,
     inviter: inviter,
     fake: fake,
-    timestamp: new Date(),
+    stagePoints: stagePoints,
+    timestamp: timestamp,
   });
+  return timestamp;
+}
+
+export async function updateJoinEvent(userId, timestamp, stagePoints) {
+  const database = await getDatabase();
+  await database.collection('events').updateOne({ 'user.id': userId, timestamp: timestamp }, {
+    $set: {
+      stagePoints: stagePoints,
+    },
+  });
+}
+
+async function addMember(member, inviter, fake) {
+  const database = await getDatabase();
 
   const invitesCollection = database.collection('members');
   const rejoin = await invitesCollection.findOne({ id: member.user.id, guildId: member.guild.id });
@@ -132,8 +159,11 @@ async function updateCounter(name, user, guildId, increment) {
     upsert: true,
     returnDocument: ReturnDocument.AFTER,
   });
+  return getObjectFieldValue(name, result.value);
+}
 
-  return name.split('.').reduce((prev, cur) => prev[cur], result.value);
+function getObjectFieldValue(field, value) {
+  return field.split('.').reduce((prev, cur) => prev ? prev[cur] : undefined, value);
 }
 
 async function getActiveStage() {

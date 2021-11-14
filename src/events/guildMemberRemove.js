@@ -25,7 +25,7 @@ async function handleGlobalPoints(client, removeMemberResult) {
       await updateGlobalCounterAndLog(client, 'fakeLeaves', originalInviter, removeMemberResult.member.guildId, 1);
     }
   } else {
-    sendLogMessage(client, `Inviter of user ${getUserTag(removeMemberResult.member.user)} is unknown, won't update global points.`);
+    sendLogMessage(client, `Original inviter of member ${getUserTag(removeMemberResult.member.user)} is unknown, won't update global points.`);
   }
 }
 
@@ -42,15 +42,15 @@ async function handleStagePoints(client, removeMemberResult) {
         await updateStageCounterAndLog(client, stage.id, 'fakeLeaves', originalInviter, removeMemberResult.member.guildId, 1);
         message = `Minimum account age requirements weren't met (> ${config.minAccountAge} days), won't update stage points.`;
       } else if (originalInviteTimestamp < stage.startedAt) {
-        sendLogMessage(client, `User ${getUserTag(removeMemberResult.member.user)} re-joined, they originally joined before the current stage started, won't update stage points.`);
+        sendLogMessage(client, `${getUserTag(removeMemberResult.member.user)} originally joined before the current stage has started, won't update stage points.`);
         message = `${getUserTag(removeMemberResult.member.user)} originally joined before the current stage has started, won't update stage points.`;
       } else {
         const points = await updateStageCounterAndLog(client, stage.id, 'points', originalInviter, removeMemberResult.member.guildId, -1);
         message = `${getUserTag(removeMemberResult.member.originalInviter)} just lost 1 point and now has ${points} ${points === 1 ? 'point' : 'points'} in total.`;
       }
     } else {
-      sendLogMessage(client, `Original inviter of user ${getUserTag(removeMemberResult.member.user)} is unknown, won't update stage points.`);
-      message = `Original inviter of user ${getUserTag(removeMemberResult.member.user)} is unknown, won't update stage points.`;
+      sendLogMessage(client, `Original inviter of member ${getUserTag(removeMemberResult.member.user)} is unknown, won't update stage points.`);
+      message = `Original inviter of member ${getUserTag(removeMemberResult.member.user)} is unknown, won't update stage points.`;
     }
   }
   return message;

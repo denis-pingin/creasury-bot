@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "babel": "babel ./src -d build",
+    "babel": "babel ./src -d build --source-maps true",
     "start": "babel-node ./src/index.js",
     "test": "babel-node ./test/tests.js",
     "deploy-commands": "babel-node ./src/deploy-commands.js"
