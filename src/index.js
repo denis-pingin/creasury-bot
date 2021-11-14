@@ -24,7 +24,7 @@ const guildInvites = new Map();
 
 client.once('ready', () => {
   try {
-    sendLogMessage(client, 'Creasury Bot ready!');
+    sendLogMessage(client, 'Creasury Bot ready for action!');
     client.guilds.cache
       .filter(guild => guild.id === config.guildId)
       .forEach(guild => {
@@ -115,3 +115,28 @@ client.on('interactionCreate', async interaction => {
 });
 
 client.login(config.token);
+
+async function exitHandler(options, exitCode) {
+  await sendLogMessage(client, 'Creasury Bot is going to rest now.');
+  await client.user.setStatus('invisible');
+  await client.destroy();
+  if (exitCode || exitCode === 0) {
+    console.log(`Exit code: ${exitCode}`);
+  }
+  if (options.exit) {
+    process.exit();
+  }
+}
+
+// do something when app is closing
+process.on('exit', exitHandler.bind(null, { cleanup:true }));
+
+// catches ctrl+c event
+process.on('SIGINT', exitHandler.bind(null, { exit:true }));
+
+// catches "kill pid" (for example: nodemon restart)
+process.on('SIGUSR1', exitHandler.bind(null, { exit:true }));
+process.on('SIGUSR2', exitHandler.bind(null, { exit:true }));
+
+// catches uncaught exceptions
+process.on('uncaughtException', exitHandler.bind(null, { exit:true }));

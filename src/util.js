@@ -1,6 +1,6 @@
 import { config } from './config';
 
-export function sendInviteMessage(client, message) {
+export async function sendInviteMessage(client, message) {
   console.log(`#invites: ${message}`);
 
   if (!client) return;
@@ -9,11 +9,11 @@ export function sendInviteMessage(client, message) {
   if (!channel) {
     console.log('Warning: invite channel not found');
   } else {
-    channel.send(message);
+    await channel.send(message);
   }
 }
 
-export function sendLogMessage(client, message) {
+export async function sendLogMessage(client, message) {
   console.log(`#log: ${message}`);
 
   if (!client) return;
@@ -22,7 +22,7 @@ export function sendLogMessage(client, message) {
   if (!channel) {
     console.log('Warning: log channel not found');
   } else {
-    channel.send(message);
+    await channel.send(message);
   }
 }
 

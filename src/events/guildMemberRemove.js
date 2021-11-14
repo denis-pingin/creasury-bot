@@ -19,9 +19,10 @@ async function handleGlobalPoints(client, removeMemberResult) {
   const originalInviter = removeMemberResult.member.originalInviter;
   if (originalInviter) {
     if (!removeMemberResult.member.fake) {
-      await updateGlobalCounterAndLog(client, 'points', originalInviter, removeMemberResult.member.guildId, -1);
+      await updateGlobalCounterAndLog(client, 'regularLeaves', originalInviter, removeMemberResult.member.guildId, 1);
+      await updateGlobalCounterAndLog(client, 'totalInvites', originalInviter, removeMemberResult.member.guildId, -1);
     } else {
-      await updateGlobalCounterAndLog(client, 'fakes', originalInviter, removeMemberResult.member.guildId, -1);
+      await updateGlobalCounterAndLog(client, 'fakeLeaves', originalInviter, removeMemberResult.member.guildId, 1);
     }
   } else {
     sendLogMessage(client, `Inviter of user ${getUserTag(removeMemberResult.member.user)} is unknown, won't update global points.`);
@@ -38,7 +39,7 @@ async function handleStagePoints(client, removeMemberResult) {
     if (originalInviter) {
       const originalInviteTimestamp = removeMemberResult.member.originalInviteTimestamp;
       if (removeMemberResult.member.fake) {
-        await updateStageCounterAndLog(client, stage.id, 'fakes', originalInviter, removeMemberResult.member.guildId, -1);
+        await updateStageCounterAndLog(client, stage.id, 'fakeLeaves', originalInviter, removeMemberResult.member.guildId, 1);
         message = `Minimum account age requirements weren't met (> ${config.minAccountAge} days), won't update stage points.`;
       } else if (originalInviteTimestamp < stage.startedAt) {
         sendLogMessage(client, `User ${getUserTag(removeMemberResult.member.user)} re-joined, they originally joined before the current stage started, won't update stage points.`);

@@ -33,9 +33,10 @@ async function handleGlobalPoints(client, addMemberResult) {
   const originalInviter = addMemberResult.member.originalInviter;
   if (originalInviter) {
     if (addMemberResult.member.fake) {
-      await updateGlobalCounterAndLog(client, 'fakes', originalInviter, addMemberResult.member.guildId, 1);
+      await updateGlobalCounterAndLog(client, 'fakeInvites', originalInviter, addMemberResult.member.guildId, 1);
     } else {
-      await updateGlobalCounterAndLog(client, 'points', originalInviter, addMemberResult.member.guildId, 1);
+      await updateGlobalCounterAndLog(client, 'regularInvites', originalInviter, addMemberResult.member.guildId, 1);
+      await updateGlobalCounterAndLog(client, 'totalInvites', originalInviter, addMemberResult.member.guildId, 1);
     }
   } else {
     sendLogMessage(client, `Inviter of user ${getUserTag(addMemberResult.member.user)} is unknown, no global points will be awarded.`);
@@ -51,7 +52,7 @@ async function handleStagePoints(client, addMemberResult) {
     const originalInviter = addMemberResult.member.originalInviter;
     if (originalInviter) {
       if (addMemberResult.member.fake) {
-        await updateStageCounterAndLog(client, stage.id, 'fakes', originalInviter, addMemberResult.member.guildId, 1);
+        await updateStageCounterAndLog(client, stage.id, 'fakeInvites', originalInviter, addMemberResult.member.guildId, 1);
         message = `Minimum account age requirements weren't met (> ${config.minAccountAge} days), ${getUserTag(addMemberResult.member.originalInviter)} won't be awarded any points.`;
       } else if (addMemberResult.rejoin) {
         const originalInviteTimestamp = addMemberResult.member.originalInviteTimestamp;
