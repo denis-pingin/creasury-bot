@@ -1,7 +1,9 @@
 import { config } from './config';
 
 export function sendInviteMessage(client, message) {
-  console.log(`Sending message to the invite channel: ${message}`);
+  console.log(`#invites: ${message}`);
+
+  if (!client) return;
 
   const channel = client.channels.cache.get(config.inviteChannelId);
   if (!channel) {
@@ -12,7 +14,9 @@ export function sendInviteMessage(client, message) {
 }
 
 export function sendLogMessage(client, message) {
-  console.log(`Sending message to the log channel: ${message}`);
+  console.log(`#log: ${message}`);
+
+  if (!client) return;
 
   const channel = client.channels.cache.get(config.logChannelId);
   if (!channel) {
@@ -20,6 +24,11 @@ export function sendLogMessage(client, message) {
   } else {
     channel.send(message);
   }
+}
+
+export function getInviterTag(user) {
+  if (!user) return 'some mysterious force';
+  return getUserTag(user);
 }
 
 export function getUserTag(user) {

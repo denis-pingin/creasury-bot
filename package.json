@@ -6,6 +6,7 @@
   "scripts": {
     "babel": "babel ./src -d build",
     "start": "babel-node ./src/index.js",
+    "test": "babel-node ./test/tests.js",
     "deploy-commands": "babel-node ./src/deploy-commands.js"
   },
   "author": "Creasury Monarch",

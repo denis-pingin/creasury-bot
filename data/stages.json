@@ -1,6 +1,6 @@
 [
   {
-    "id": "newborn-butterflies-stage-1",
+    "id": "Newborn Butterflies: Stage 1",
     "order": 0,
     "event": "Newborn Butterflies",
     "stage": "Stage 1",
@@ -9,7 +9,10 @@
     "ended": true,
     "endedAt": 1636834847,
     "active": false,
-    "goals": {
+    "scoring": {
+      "invite": 1
+    },
+    "goal": {
       "memberCount": 1000
     },
     "rewards": {
@@ -225,7 +228,7 @@
     ]
   },
   {
-    "id": "newborn-butterflies-stage-2",
+    "id": "Newborn Butterflies: Stage 2",
     "order": 1,
     "event": "Newborn Butterflies",
     "stage": "Stage 2",
@@ -233,31 +236,43 @@
     "startedAt": 1636835847,
     "ended": false,
     "active": true,
+    "scoring": {
+      "invite": 1
+    },
     "goals": {
       "memberCount": 2500
     }
   },
   {
-    "id": "butterfly-family-stage-1",
+    "id": "Butterfly Family: Stage 1",
     "order": 2,
     "event": "Butterfly Family",
     "stage": "Stage 1",
     "started": false,
     "ended": false,
     "active": false,
+    "scoring": {
+      "invite": 1,
+      "retweet": 1
+    },
     "goals": {
       "memberCount": 5000,
       "retweets": 250
     }
   },
   {
-    "id": "butterfly-family-stage-2",
+    "id": "Butterfly Family: Stage 2",
     "order": 3,
     "event": "Butterfly Family",
     "stage": "Stage 2",
     "started": false,
     "ended": false,
     "active": false,
+    "scoring": {
+      "invite": 1,
+      "retweet": 1,
+      "follow": 1
+    },
     "goals": {
       "memberCount": 7500,
       "retweets": 500,
