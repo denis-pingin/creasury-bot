@@ -9,7 +9,7 @@ export default async function handleGuildMemberRemove(client, member) {
   await handleGlobalPoints(client, removeMemberResult);
   const stageMessage = await handleStagePoints(client, removeMemberResult);
 
-  let message = `${getUserTag(member.user)} has left the Creasury community.`;
+  let message = `${getUserTag(member.user)} has left the Creasury community :pensive:`;
   message = `${message}\nThey were originally invited by ${getInviterTag(removeMemberResult.member.originalInviter)}.`;
 
   sendInviteMessage(client, `${message}\n${stageMessage}`);

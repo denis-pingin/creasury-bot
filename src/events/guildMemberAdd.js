@@ -15,14 +15,14 @@ export default async function handleGuildMemberAdd(client, member, inviter) {
   await handleGlobalPoints(client, addMemberResult);
   const stageMessage = await handleStagePoints(client, addMemberResult);
 
-  let message = `${getUserTag(member.user)} has ${addMemberResult.rejoin ? 're-' : ''}joined the Creasury community.`;
+  let message = `${getUserTag(member.user)} has ${addMemberResult.rejoin ? 're-' : ''}joined the Creasury community :tada:\n`;
   if (addMemberResult.rejoin) {
-    message = `${message}\nThey were originally invited by ${getInviterTag(addMemberResult.member.originalInviter)}`;
+    message = `${message}They were invited by ${getInviterTag(addMemberResult.member.inviter)}`;
     if (addMemberResult.member.inviter.id !== addMemberResult.member.originalInviter.id) {
-      message = `${message} and now invited by ${getInviterTag(addMemberResult.member.inviter)}`;
+      message = `${message} and originally invited by ${getInviterTag(addMemberResult.member.originalInviter)}`;
     }
   } else {
-    message = `${message}\nThey were invited by ${getInviterTag(addMemberResult.member.originalInviter)}`;
+    message = `${message}They were invited by ${getInviterTag(addMemberResult.member.originalInviter)}`;
   }
   message = `${message}.`;
 
