@@ -3,17 +3,25 @@ import { config } from './config';
 import { MongoClient, ReturnDocument } from 'mongodb';
 import { getUserTag } from './util';
 
-const client = new MongoClient(config.dbConnectionString);
+const cache = {};
 
-async function getDatabase() {
-  await client.connect();
-  return client.db(config.dbName);
+export function setConnection(connection) {
+  cache.connection = connection;
 }
 
-getDatabase().then(db => {
-  db.createIndex('members', { 'id': 1, 'guildId': 1 }, { unique: true, name: 'ids' });
-  db.createIndex('memberCounters', { 'id': 1, 'guildId': 1 }, { unique: true, name: 'ids' });
-});
+async function getConnection() {
+  if (!cache.connection) {
+    console.log('Creating MongoDB connection');
+    const client = new MongoClient(config.dbConnectionString);
+    cache.connection = await client.connect();
+  }
+  return cache.connection;
+}
+
+async function getDatabase() {
+  const connection = await getConnection();
+  return connection.db(config.dbName);
+}
 
 async function getOriginalInviter(member) {
   const database = await getDatabase();
@@ -55,7 +63,7 @@ export async function getStagePoints(userId, guildId) {
 
 export async function addJoinEvent(member, inviter, fake, stagePoints) {
   const database = await getDatabase();
-  const timestamp = new Date();
+  const timestamp = Date.now();
   await database.collection('events').insertOne({
     type: 'join',
     guildId: member.guild.id,
@@ -79,16 +87,26 @@ export async function updateJoinEvent(userId, timestamp, stagePoints) {
 
 async function addMember(member, inviter, fake) {
   const database = await getDatabase();
+  const membersCollection = database.collection('members');
 
-  const invitesCollection = database.collection('members');
-  const rejoin = await invitesCollection.findOne({ id: member.user.id, guildId: member.guild.id });
+  if (inviter) {
+    await membersCollection.updateOne({ id: inviter.id, guildId: member.guild.id }, {
+      $set: {
+        id: inviter.id,
+        guildId: member.guild.id,
+        user: inviter,
+      },
+    });
+  }
+
+  const rejoin = await membersCollection.findOne({ id: member.user.id, guildId: member.guild.id });
   let newMember;
   if (rejoin) {
-    newMember = await invitesCollection.findOneAndUpdate({ id: member.user.id, guildId: member.guild.id }, {
+    newMember = await membersCollection.findOneAndUpdate({ id: member.user.id, guildId: member.guild.id }, {
       $set: {
         user: member.user,
         inviter: inviter,
-        inviteTimestamp: new Date(),
+        inviteTimestamp: Date.now(),
         fake: fake,
         removed: false,
       },
@@ -98,8 +116,8 @@ async function addMember(member, inviter, fake) {
     });
     console.log(`A rejoined member ${getUserTag(member.user)} has originally joined on ${rejoin.originalInviteTimestamp} and were invited by ${getUserTag(rejoin.originalInviter)}`);
   } else {
-    const timestamp = new Date();
-    newMember = await invitesCollection.findOneAndUpdate({ id: member.user.id, guildId: member.guild.id }, {
+    const timestamp = Date.now();
+    newMember = await membersCollection.findOneAndUpdate({ id: member.user.id, guildId: member.guild.id }, {
       $set: {
         id: member.user.id,
         guildId: member.guild.id,
@@ -126,7 +144,7 @@ async function removeMember(member) {
     type: 'leave',
     guildId: member.guild.id,
     user: member.user,
-    timestamp: new Date(),
+    timestamp: Date.now(),
   });
 
   const result = await database.collection('members').findOneAndUpdate({ id: member.user.id, guildId: member.guild.id }, {
@@ -135,7 +153,7 @@ async function removeMember(member) {
       guildId: member.guild.id,
       user: member.user,
       removed: true,
-      removeTimestamp: new Date(),
+      removeTimestamp: Date.now(),
     },
   }, {
     upsert: true,
@@ -152,7 +170,7 @@ async function updateCounter(name, user, guildId, increment) {
     $set: {
       id: user.id,
       guildId: guildId,
-      lastUpdated: new Date(),
+      lastUpdated: Date.now(),
     },
     $inc: { [name]: increment },
   }, {
@@ -160,6 +178,12 @@ async function updateCounter(name, user, guildId, increment) {
     returnDocument: ReturnDocument.AFTER,
   });
   return getObjectFieldValue(name, result.value);
+}
+
+export async function getLastTimeReachedThisScore(id, points) {
+  const database = await getDatabase();
+  const result = await database.collection('events').findOne({ 'inviter.id': id, stagePoints: points }, { sort: { timestamp: -1 } });
+  return result?.timestamp | 0;
 }
 
 function getObjectFieldValue(field, value) {
@@ -171,4 +195,4 @@ async function getActiveStage() {
   return database.collection('stages').findOne({ active: true });
 }
 
-export { getDatabase, getOriginalInviter, getInviter, addMember, removeMember, updateCounter, getActiveStage };
+export { getConnection, getDatabase, getOriginalInviter, getInviter, addMember, removeMember, updateCounter, getActiveStage };

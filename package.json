@@ -6,7 +6,7 @@
   "scripts": {
     "babel": "babel ./src -d build --source-maps true",
     "start": "babel-node ./src/index.js",
-    "test": "babel-node ./test/tests.js",
+    "test": "jest --forceExit",
     "deploy-commands": "babel-node ./src/deploy-commands.js"
   },
   "author": "Creasury Monarch",
@@ -35,6 +35,9 @@
     "@babel/core": "^7.16.0",
     "@babel/node": "^7.16.0",
     "@babel/preset-env": "^7.16.0",
-    "eslint": "^8.2.0"
+    "@shelf/jest-mongodb": "^2.1.0",
+    "babel-jest": "^27.3.1",
+    "eslint": "^8.2.0",
+    "jest": "^27.3.1"
   }
 }

@@ -5,8 +5,14 @@ import * as fs from 'fs';
 import { getUserTag, sendLogMessage } from './util';
 import handleGuildMemberAdd from './events/guildMemberAdd';
 import handleGuildMemberRemove from './events/guildMemberRemove';
+import { getDatabase } from './db';
 
 console.log(`Creasury Bot is starting for guild: ${config.guildId}`);
+
+getDatabase().then(db => {
+  db.createIndex('members', { 'id': 1, 'guildId': 1 }, { unique: true, name: 'ids' });
+  db.createIndex('memberCounters', { 'id': 1, 'guildId': 1 }, { unique: true, name: 'ids' });
+});
 
 const client = new Client({
   intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_BANS, Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS, Intents.FLAGS.GUILD_INTEGRATIONS, Intents.FLAGS.GUILD_WEBHOOKS, Intents.FLAGS.GUILD_INVITES, Intents.FLAGS.GUILD_VOICE_STATES, Intents.FLAGS.GUILD_PRESENCES, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILD_MESSAGE_TYPING, Intents.FLAGS.DIRECT_MESSAGES, Intents.FLAGS.DIRECT_MESSAGE_REACTIONS, Intents.FLAGS.DIRECT_MESSAGE_TYPING],
@@ -118,8 +124,6 @@ client.login(config.token);
 
 async function exitHandler(options, exitCode) {
   await sendLogMessage(client, 'Creasury Bot is going to rest now.');
-  await client.user.setStatus('invisible');
-  await client.destroy();
   if (exitCode || exitCode === 0) {
     console.log(`Exit code: ${exitCode}`);
   }

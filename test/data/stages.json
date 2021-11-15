@@ -13,13 +13,13 @@
     },
     "levels": {
       "3": {
-        "minPoints": 3
+        "minPoints": 2
       },
       "2": {
-        "minPoints": 3
+        "minPoints": 2
       },
       "1": {
-        "minPoints": 2
+        "minPoints": 1
       }
     },
     "goal": {
