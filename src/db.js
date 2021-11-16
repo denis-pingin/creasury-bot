@@ -2,8 +2,42 @@ import { config } from './config';
 
 import { MongoClient, ReturnDocument } from 'mongodb';
 import { getUserTag } from './util';
+import fs from 'fs';
 
 const cache = {};
+
+export function init() {
+  let clean = false;
+  process.argv.forEach(function(val, index) {
+    if (index > 1 && val === '--clean-db') {
+      clean = true;
+    }
+  });
+
+  getDatabase().then(db => {
+    if (clean) {
+      db.collection('events').deleteMany({});
+      db.collection('members').deleteMany({});
+      db.collection('memberCounters').deleteMany({});
+      db.collection('stages').deleteMany({});
+      db.collection('stageRankings').deleteMany({});
+
+      const stages = JSON.parse(fs.readFileSync(`${__dirname}/../data/stages-dev.json`));
+      db.collection('stages').insertMany(stages);
+    }
+
+    db.createIndex('members', { 'id': 1, 'guildId': 1 }, { unique: true, name: 'compositePrimaryKey' });
+    db.createIndex('memberCounters', { 'id': 1, 'guildId': 1 }, { unique: true, name: 'compositePrimaryKey' });
+    db.createIndex('events', { 'type': 1 }, { name: 'type' });
+    db.createIndex('events', { 'guildId': 1 }, { name: 'guildId' });
+    db.createIndex('events', { 'user.id': 1 }, { name: 'userId' });
+    db.createIndex('events', { 'inviter.id': 1 }, { name: 'inviterId' });
+    db.createIndex('events', { 'originalInviter.id': 1 }, { name: 'originalInviterId' });
+    db.createIndex('events', { 'timestamp': 1 }, { name: 'timestamp' });
+    db.createIndex('stages', { 'id': 1, 'guildId': 1 }, { unique: true, name: 'compositePrimaryKey' });
+    db.createIndex('stages', { 'active': 1 }, { name: 'active' });
+  });
+}
 
 export function setConnection(connection) {
   cache.connection = connection;
@@ -52,25 +86,29 @@ async function getInviter(member) {
 export async function getStagePoints(userId, guildId) {
   const database = await getDatabase();
   const stage = await getActiveStage();
-  const field = `${stage.id}.points`;
   if (stage) {
-    const stagePointsResult = await database.collection('memberCounters').findOne({ id: userId, guildId: guildId }, { projection: { [field]: true } });
+    const field = `${stage.id}.points`;
+    const stagePointsResult = await database.collection('memberCounters').findOne({
+      id: userId,
+      guildId: guildId,
+    }, { projection: { [field]: true } });
     if (stagePointsResult) {
       return getObjectFieldValue(field, stagePointsResult);
     }
   }
 }
 
-export async function addJoinEvent(member, inviter, fake, stagePoints) {
+export async function addJoinEvent(member, inviter, originalInviter, fake) {
   const database = await getDatabase();
   const timestamp = Date.now();
   await database.collection('events').insertOne({
     type: 'join',
     guildId: member.guild.id,
     user: member.user,
+    createdAt: member.user.createdAt,
     inviter: inviter,
+    originalInviter: originalInviter,
     fake: fake,
-    stagePoints: stagePoints,
     timestamp: timestamp,
   });
   return timestamp;
@@ -85,19 +123,22 @@ export async function updateJoinEvent(userId, timestamp, stagePoints) {
   });
 }
 
+export async function initMember(user, guildId) {
+  const database = await getDatabase();
+  await database.collection('members').updateOne({ id: user.id, guildId: guildId }, {
+    $set: {
+      id: user.id,
+      guildId,
+      user,
+    },
+  }, {
+    upsert: true,
+  });
+}
+
 async function addMember(member, inviter, fake) {
   const database = await getDatabase();
   const membersCollection = database.collection('members');
-
-  if (inviter) {
-    await membersCollection.updateOne({ id: inviter.id, guildId: member.guild.id }, {
-      $set: {
-        id: inviter.id,
-        guildId: member.guild.id,
-        user: inviter,
-      },
-    });
-  }
 
   const rejoin = await membersCollection.findOne({ id: member.user.id, guildId: member.guild.id });
   let newMember;
@@ -147,7 +188,10 @@ async function removeMember(member) {
     timestamp: Date.now(),
   });
 
-  const result = await database.collection('members').findOneAndUpdate({ id: member.user.id, guildId: member.guild.id }, {
+  const result = await database.collection('members').findOneAndUpdate({
+    id: member.user.id,
+    guildId: member.guild.id,
+  }, {
     $set: {
       id: member.user.id,
       guildId: member.guild.id,
@@ -182,8 +226,34 @@ async function updateCounter(name, user, guildId, increment) {
 
 export async function getLastTimeReachedThisScore(id, points) {
   const database = await getDatabase();
-  const result = await database.collection('events').findOne({ 'inviter.id': id, stagePoints: points }, { sort: { timestamp: -1 } });
+  const result = await database.collection('events').findOne({
+    'originalInviter.id': id,
+    stagePoints: points,
+  }, { sort: { timestamp: -1 } });
   return result?.timestamp | 0;
+}
+
+export async function updateStageRankings(stage, rankings, guildId) {
+  const database = await getDatabase();
+
+  const data = {
+    stageId: stage.id,
+    guildId: guildId,
+    rankings: rankings,
+    lastUpdated: Date.now(),
+  };
+
+  await database.collection('stageRankings').updateOne({ stageId: stage.id, guildId: guildId }, {
+    $set: data,
+  }, {
+    upsert: true,
+  });
+  await database.collection('stageRankingsLog').insertOne(data);
+}
+
+export async function getStageRankings(stageId, guildId) {
+  const database = await getDatabase();
+  return await database.collection('stageRankings').findOne({ stageId: stageId, guildId: guildId });
 }
 
 function getObjectFieldValue(field, value) {
@@ -195,4 +265,13 @@ async function getActiveStage() {
   return database.collection('stages').findOne({ active: true });
 }
 
-export { getConnection, getDatabase, getOriginalInviter, getInviter, addMember, removeMember, updateCounter, getActiveStage };
+export {
+  getConnection,
+  getDatabase,
+  getOriginalInviter,
+  getInviter,
+  addMember,
+  removeMember,
+  updateCounter,
+  getActiveStage,
+};

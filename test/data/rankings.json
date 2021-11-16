@@ -1,0 +1,200 @@
+{
+  "_id": "6192e758bfae3a9824a8acf1",
+  "guildId": "1",
+  "stageId": "Newborn Butterflies: Stage 1",
+  "lastUpdated": 1637017433555,
+  "rankings": [
+    {
+      "id": "2",
+      "points": 3,
+      "level": 5,
+      "timestamp": 634893144
+    },
+    {
+      "id": "3",
+      "points": 3,
+      "level": 4,
+      "timestamp": 634893223
+    },
+    {
+      "id": "0",
+      "points": 3,
+      "level": 3,
+      "timestamp": 634893674
+    },
+    {
+      "id": "1",
+      "points": 3,
+      "level": 2,
+      "timestamp": 634893699
+    },
+    {
+      "id": "4",
+      "points": 2,
+      "level": 2,
+      "timestamp": 634893275
+    },
+    {
+      "id": "5",
+      "points": 2,
+      "level": 1,
+      "timestamp": 634893326
+    },
+    {
+      "id": "7",
+      "points": 2,
+      "level": 1,
+      "timestamp": 634893424
+    },
+    {
+      "id": "8",
+      "points": 2,
+      "level": 1,
+      "timestamp": 634893476
+    },
+    {
+      "id": "9",
+      "points": 2,
+      "level": 1,
+      "timestamp": 634893544
+    },
+    {
+      "id": "10",
+      "points": 2,
+      "level": 1,
+      "timestamp": 634893587
+    },
+    {
+      "id": "11",
+      "points": 2,
+      "level": 1,
+      "timestamp": 634893629
+    },
+    {
+      "id": "6",
+      "points": 2,
+      "level": 1,
+      "timestamp": 634893747
+    },
+    {
+      "id": "12",
+      "points": 1,
+      "level": 1,
+      "timestamp": null
+    },
+    {
+      "id": "13",
+      "points": 0,
+      "level": null,
+      "timestamp": 0
+    },
+    {
+      "id": "14",
+      "points": 0,
+      "level": null,
+      "timestamp": 0
+    },
+    {
+      "id": "15",
+      "points": 0,
+      "level": null,
+      "timestamp": 0
+    },
+    {
+      "id": "16",
+      "points": 0,
+      "level": null,
+      "timestamp": 0
+    },
+    {
+      "id": "17",
+      "points": 0,
+      "level": null,
+      "timestamp": 0
+    },
+    {
+      "id": "18",
+      "points": 0,
+      "level": null,
+      "timestamp": 0
+    },
+    {
+      "id": "19",
+      "points": 0,
+      "level": null,
+      "timestamp": 0
+    },
+    {
+      "id": "20",
+      "points": 0,
+      "level": null,
+      "timestamp": 0
+    },
+    {
+      "id": "21",
+      "points": 0,
+      "level": null,
+      "timestamp": 0
+    },
+    {
+      "id": "22",
+      "points": 0,
+      "level": null,
+      "timestamp": 0
+    },
+    {
+      "id": "23",
+      "points": 0,
+      "level": null,
+      "timestamp": 0
+    },
+    {
+      "id": "24",
+      "points": 0,
+      "level": null,
+      "timestamp": 0
+    },
+    {
+      "id": "25",
+      "points": 0,
+      "level": null,
+      "timestamp": 0
+    },
+    {
+      "id": "26",
+      "points": 0,
+      "level": null,
+      "timestamp": 0
+    },
+    {
+      "id": "27",
+      "points": 0,
+      "level": null,
+      "timestamp": 0
+    },
+    {
+      "id": "28",
+      "points": 0,
+      "level": null,
+      "timestamp": 0
+    },
+    {
+      "id": "29",
+      "points": 0,
+      "level": null,
+      "timestamp": 0
+    },
+    {
+      "id": "30",
+      "points": 0,
+      "level": null,
+      "timestamp": 0
+    },
+    {
+      "id": "31",
+      "points": 0,
+      "level": null,
+      "timestamp": 0
+    }
+  ]
+}
