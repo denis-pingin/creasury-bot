@@ -2,12 +2,12 @@ import 'regenerator-runtime/runtime';
 import { getDatabase, setConnection } from '../src/db';
 import { MongoClient } from 'mongodb';
 import * as fs from 'fs';
+import { computeRankings, getLeaderboard, getMemberRanking } from '../src/ranking';
+import { strict as assert } from 'assert';
+import { clearData, generateMembers } from './test-util';
 import handleGuildMemberAdd from '../src/events/guildMemberAdd';
 import handleGuildMemberRemove from '../src/events/guildMemberRemove';
-import { computeRankings, getMemberRanking } from '../src/ranking';
-import { strict as assert } from 'assert';
 import * as db from '../src/db';
-import { clearData, generateMembers } from './test-util';
 
 const stageId = 'Newborn Butterflies: Stage 1';
 const guildId = '1';
@@ -111,6 +111,7 @@ describe('compute rankings', () => {
 
 
     let result = await db.getStageRankings(stageId, guildId);
+    fs.writeFileSync(`${__dirname}/data/rankings.json`, JSON.stringify(result, null, 2));
     assert.notEqual(result, null);
     result = result.rankings.reduce((prev, cur) => {
       prev[cur.id] = cur;
@@ -132,6 +133,11 @@ describe('compute rankings', () => {
     for (let i = 13; i < 32; i++) {
       verifyTableRank(result, i, i + 1, 0, null);
     }
+  });
+
+  test('leaderboard', async () => {
+    const leaderboard = await getLeaderboard(stages.find(stage => stage.id === stageId), members[0].user.id, guildId);
+    assert.notEqual(leaderboard, null);
   });
 });
 

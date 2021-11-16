@@ -22,7 +22,7 @@ module.exports = {
           message = `You have **${rank.points}** ${rank.points === 1 ? 'point' : 'points'} and your rank is **${rank.position}**. You are a ${getRewardTag(stage, rank.level, true)}.`;
         } else {
           // No level
-          message = `You have **${rank.points}** ${rank.points === 1 ? 'point' : 'points'} and your rank is **${rank.position}**. You need to work harder to earn an achievement.`;
+          message = `You have **${rank.points}** ${rank.points === 1 ? 'point' : 'points'} and your rank is **${rank.position}**. You need to work harder to earn a reward.`;
         }
       } else {
         message = 'Unfortunately I could not find you in the ranking table.';
