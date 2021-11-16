@@ -6,7 +6,7 @@ import { getMemberRanking } from '../ranking';
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('rank')
-    .setDescription('Checks your current stage rank'),
+    .setDescription('Checks your current stage rank.'),
   async execute(interaction) {
     const stage = await db.getActiveStage();
     let message = '';
@@ -14,7 +14,6 @@ module.exports = {
       message = 'Currently there is no active event happening.';
     } else {
       console.log(`Active stage is "${stage.id}" with levels:`, stage.levels);
-      console.log(interaction);
 
       const rank = await getMemberRanking(interaction.user.id, stage.id, interaction.guildId);
       if (rank) {
