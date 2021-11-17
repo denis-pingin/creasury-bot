@@ -310,7 +310,7 @@
       "5": [
         {
           "type": "achievement",
-          "id": "Pioneer Champion ** I",
+          "id": "Pioneer Champion ** II",
           "distribution": "guaranteed",
           "supply": -1
         },
@@ -330,7 +330,7 @@
       "4": [
         {
           "type": "achievement",
-          "id": "Pioneer Champion ** I",
+          "id": "Pioneer Champion ** II",
           "distribution": "guaranteed",
           "supply": -1
         },
@@ -350,7 +350,7 @@
       "3": [
         {
           "type": "achievement",
-          "id": "Pioneer Champion * I",
+          "id": "Pioneer Champion * II",
           "distribution": "guaranteed",
           "supply": -1
         },
@@ -370,7 +370,7 @@
       "2": [
         {
           "type": "achievement",
-          "id": "Pioneer Master I",
+          "id": "Pioneer Master II",
           "distribution": "guaranteed",
           "supply": -1
         },
@@ -378,13 +378,13 @@
           "type": "creasury-butterfly",
           "id": "Creasury Butterfly",
           "distribution": "weighted-lottery",
-          "supply": 3
+          "supply": 5
         },
         {
           "type": "whitelist-spot",
           "id": "Early Presale",
           "distribution": "weighted-lottery",
-          "supply": 3
+          "supply": 5
         }
       ],
       "1": [
@@ -398,13 +398,13 @@
           "type": "creasury-butterfly",
           "id": "Creasury Butterfly",
           "distribution": "simple-lottery",
-          "supply": 1
+          "supply": 2
         },
         {
           "type": "whitelist-spot",
           "id": "Early Presale",
           "distribution": "simple-lottery",
-          "supply": 5
+          "supply": 7
         }
       ]
     }
