@@ -36,6 +36,7 @@ export function init() {
     db.createIndex('events', { 'timestamp': 1 }, { name: 'timestamp' });
     db.createIndex('stages', { 'id': 1, 'guildId': 1 }, { unique: true, name: 'compositePrimaryKey' });
     db.createIndex('stages', { 'active': 1 }, { name: 'active' });
+    db.createIndex('stages', { 'order': 1 }, { name: 'order' });
   });
 }
 
@@ -85,7 +86,7 @@ async function getInviter(member) {
 
 export async function getStagePoints(userId, guildId) {
   const database = await getDatabase();
-  const stage = await getActiveStage();
+  const stage = await getActiveStage(guildId);
   if (stage) {
     const field = `${stage.id}.points`;
     const stagePointsResult = await database.collection('memberCounters').findOne({
@@ -260,9 +261,50 @@ function getObjectFieldValue(field, value) {
   return field.split('.').reduce((prev, cur) => prev ? prev[cur] : undefined, value);
 }
 
-async function getActiveStage() {
+export async function getStageByOrder(order, guildId) {
   const database = await getDatabase();
-  return database.collection('stages').findOne({ active: true });
+  return await database.collection('stages').findOne({ order: order, guildId: guildId });
+}
+
+async function getActiveStage(guildId) {
+  const database = await getDatabase();
+  return await database.collection('stages').findOne({ active: true, guildId: guildId });
+}
+
+export async function startStage(id, guildId) {
+  const database = await getDatabase();
+  const result = await database.collection('stages').findOneAndUpdate({ 'id': id, guildId: guildId }, {
+    $set: {
+      started: true,
+      startedAt: Date.now(),
+      active: true,
+    },
+  }, {
+    returnDocument: ReturnDocument.AFTER,
+  });
+  return result.value;
+}
+
+export async function endStage(id, guildId) {
+  const database = await getDatabase();
+  return await database.collection('stages').findOneAndUpdate({ 'id': id, guildId: guildId }, {
+    $set: {
+      ended: true,
+      endedAt: Date.now(),
+      active: false,
+    },
+  }, {
+    returnDocument: ReturnDocument.AFTER,
+  });
+}
+
+export async function updateStageEndTime(id, guildId, time) {
+  const database = await getDatabase();
+  return await database.collection('stages').updateOne({ 'id': id, guildId: guildId }, {
+    $set: {
+      endTime: time,
+    },
+  });
 }
 
 export {

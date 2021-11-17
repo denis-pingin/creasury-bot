@@ -1,7 +1,7 @@
 [
   {
     "id": "Newborn Butterflies: Stage 1",
-    "guildId": "1",
+    "guildId": "896118395530002462",
     "number": 1,
     "order": 0,
     "event": "Newborn Butterflies",
@@ -31,7 +31,7 @@
       }
     },
     "goal": {
-      "memberCount": 1000
+      "memberCount": 3
     },
     "rewards": {
       "5": [
@@ -275,7 +275,7 @@
   },
   {
     "id": "Newborn Butterflies: Stage 2",
-    "guildId": "1",
+    "guildId": "896118395530002462",
     "number": 2,
     "order": 1,
     "event": "Newborn Butterflies",
@@ -304,7 +304,7 @@
       }
     },
     "goals": {
-      "memberCount": 2500
+      "memberCount": 5
     },
     "rewards": {
       "5": [

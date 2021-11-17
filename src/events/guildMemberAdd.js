@@ -4,6 +4,7 @@ import { config } from '../config';
 import { updateGlobalCounterAndLog } from '../counters';
 import { handleGlobalPoints, handleStagePoints } from '../scoring';
 import { computeRankings } from '../ranking';
+import { startStageTimer } from '../stage';
 
 export default async function handleGuildMemberAdd(client, member, inviter) {
   const fake = Date.now() - member.user.createdAt < 1000 * 60 * 60 * 24 * config.minAccountAge;
@@ -26,7 +27,7 @@ export default async function handleGuildMemberAdd(client, member, inviter) {
   await handleGlobalPoints(client, addMemberResult);
 
   // Check if there is an active stage
-  const stage = await db.getActiveStage();
+  const stage = await db.getActiveStage(member.guild.id);
   if (!stage) {
     await sendLogMessage(client, 'No active stage found, won\'t award any stage points.');
   } else {
@@ -45,6 +46,24 @@ export default async function handleGuildMemberAdd(client, member, inviter) {
 
     // Append stage message
     message = `${message}\n${stageMessage}`;
+
+    // Member count goal
+    const memberCount = member.guild.memberCount;
+    const memberGoal = stage.goal?.memberCount;
+    if (!stage.endTime && memberGoal) {
+      let stageGoalMessage;
+      if (memberCount >= memberGoal) {
+        const stageEndTime = await startStageTimer(stage, member.guild.id, 1000);
+
+        stageGoalMessage = `Congratulations, the stage goal of ${stage.goal.memberCount} members has been reached!\n`;
+        stageGoalMessage = `${stageGoalMessage}Stage **${stage.id}** will end at **${stageEndTime.toUTCString()}**. Hurry up, you can still earn points until then!\n`;
+      } else {
+        stageGoalMessage = `Still ${stage.goal.memberCount} ${stage.goal.memberCount === 1 ? 'member' : 'members'} to go to reach the stage goal!\n`;
+      }
+
+      // Append goal reached
+      message = `${message}\n\n${stageGoalMessage}\n`;
+    }
   }
 
   // Send invite message

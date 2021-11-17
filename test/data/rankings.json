@@ -2,90 +2,90 @@
   "_id": "6192e758bfae3a9824a8acf1",
   "guildId": "1",
   "stageId": "Newborn Butterflies: Stage 1",
-  "lastUpdated": 1637098989211,
+  "lastUpdated": 1637114760521,
   "rankings": [
     {
       "id": "2",
       "points": 3,
       "level": 5,
-      "timestamp": 716448874,
+      "timestamp": 732220165,
       "position": 1
     },
     {
       "id": "3",
       "points": 3,
       "level": 4,
-      "timestamp": 716448944,
+      "timestamp": 732220238,
       "position": 2
     },
     {
       "id": "0",
       "points": 3,
       "level": 3,
-      "timestamp": 716449343,
+      "timestamp": 732220636,
       "position": 3
     },
     {
       "id": "1",
       "points": 3,
       "level": 2,
-      "timestamp": 716449363,
+      "timestamp": 732220660,
       "position": 4
     },
     {
       "id": "4",
       "points": 2,
       "level": 2,
-      "timestamp": 716448989,
+      "timestamp": 732220284,
       "position": 5
     },
     {
       "id": "5",
       "points": 2,
       "level": 1,
-      "timestamp": 716449038,
+      "timestamp": 732220334,
       "position": 6
     },
     {
       "id": "7",
       "points": 2,
       "level": 1,
-      "timestamp": 716449135,
+      "timestamp": 732220432,
       "position": 7
     },
     {
       "id": "8",
       "points": 2,
       "level": 1,
-      "timestamp": 716449182,
+      "timestamp": 732220478,
       "position": 8
     },
     {
       "id": "9",
       "points": 2,
       "level": 1,
-      "timestamp": 716449224,
+      "timestamp": 732220519,
       "position": 9
     },
     {
       "id": "10",
       "points": 2,
       "level": 1,
-      "timestamp": 716449263,
+      "timestamp": 732220560,
       "position": 10
     },
     {
       "id": "11",
       "points": 2,
       "level": 1,
-      "timestamp": 716449298,
+      "timestamp": 732220598,
       "position": 11
     },
     {
       "id": "6",
       "points": 2,
       "level": 1,
-      "timestamp": 716449403,
+      "timestamp": 732220705,
       "position": 12
     },
     {

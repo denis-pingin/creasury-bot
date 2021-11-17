@@ -31,7 +31,7 @@ async function handleGlobalPoints(client, removeMemberResult) {
 
 async function handleStagePoints(client, removeMemberResult) {
   let message = '';
-  const stage = await db.getActiveStage();
+  const stage = await db.getActiveStage(removeMemberResult.member.guildId);
   if (!stage) {
     await sendLogMessage(client, 'No active stage found, won\'t update stage points.');
   } else {

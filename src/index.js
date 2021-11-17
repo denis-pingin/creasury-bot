@@ -1,6 +1,6 @@
 import 'regenerator-runtime/runtime.js';
 import { config } from './config';
-import { Client, Intents, Collection } from 'discord.js';
+import { Client, Collection, Intents } from 'discord.js';
 import * as fs from 'fs';
 import { getUserTag, sendLogMessage } from './util';
 import handleGuildMemberAdd from './events/guildMemberAdd';

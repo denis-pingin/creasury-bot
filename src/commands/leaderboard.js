@@ -8,7 +8,7 @@ module.exports = {
     .setName('leaderboard')
     .setDescription('Prints the stage leaderboard.'),
   async execute(interaction) {
-    const stage = await db.getActiveStage();
+    const stage = await db.getActiveStage(interaction.guildId);
     let message = '';
     if (!stage) {
       message = 'Currently there is no active event happening.';
