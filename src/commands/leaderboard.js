@@ -26,7 +26,7 @@ module.exports = {
 };
 
 function printLeaderboard(stage, leaderboard) {
-  let message = `-------------------- Current leaderboard for the event **${stage.id}** --------------------\n`;
+  let message = `-------------------- Current leaderboard for the stage **${stage.id}** --------------------\n`;
   leaderboard.forEach(entry => {
     if (entry.me) {
       message = `${message}**`;
