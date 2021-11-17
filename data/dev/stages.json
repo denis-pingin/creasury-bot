@@ -30,7 +30,7 @@
         "minPoints": 2
       }
     },
-    "goal": {
+    "goals": {
       "memberCount": 3
     },
     "rewards": {

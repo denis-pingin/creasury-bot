@@ -8,8 +8,11 @@ import handleGuildMemberRemove from './events/guildMemberRemove';
 import * as inviteTracker from './invite-tracker';
 import * as db from './db';
 import { handleInit } from './events/init';
+import { deployCommands } from './deploy-commands';
 
 console.log(`Creasury Bot is starting for guild: ${config.guildId}`);
+
+deployCommands();
 
 db.init();
 

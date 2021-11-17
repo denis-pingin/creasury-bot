@@ -54,11 +54,11 @@ export default async function handleGuildMemberAdd(client, member, inviter) {
 
     // Member count goal
     const memberCount = member.guild.memberCount;
-    const memberGoal = stage.goal?.memberCount;
+    const memberGoal = stage.goals?.memberCount;
     if (!stage.endTime && memberGoal) {
       let stageGoalMessage;
       if (memberCount >= memberGoal) {
-        const stageEndTime = await startStageTimer(stage, member.guild.id, 1000);
+        const stageEndTime = await startStageTimer(client, stage, member.guild.id, 10000);
 
         stageGoalMessage = `Congratulations, the stage goal of ${stage.goal.memberCount} members has been reached!\n`;
         stageGoalMessage = `${stageGoalMessage}Stage **${stage.id}** will end at **${stageEndTime.toUTCString()}**. Hurry up, you can still earn points until then!\n`;

@@ -32,6 +32,29 @@ describe('stage', () => {
     await database.collection('stages').insertMany(stages);
   });
 
+  test('no previous stage if the first stage is active', async () => {
+    const prevStage = await db.getPreviousStage(guildId);
+    console.log(prevStage);
+    expect(prevStage).toBeFalsy();
+  });
+
+  test('get previous stage if the second stage is active', async () => {
+    const stage = stages.find(s => s.id === stageId);
+    await switchStage(stage);
+    const prevStage = await db.getPreviousStage(guildId);
+    expect(prevStage).toBeTruthy();
+    expect(prevStage.id).toBe(stageId);
+  });
+
+  test('get previous stage if all stages have ended', async () => {
+    const stage = stages.find(s => s.id === stageId);
+    const nextStage = await switchStage(stage);
+    await switchStage(nextStage);
+    const prevStage = await db.getPreviousStage(guildId);
+    expect(prevStage).toBeTruthy();
+    expect(prevStage.id).toBe(nextStageId);
+  });
+
   test('stage end time same day', async () => {
     const expected = new Date(Date.UTC(2021, 11, 31, 12, 0, 0));
     const endTime = getStageEndTime(new Date(2021, 11, 31, 11, 59, 59));
@@ -82,7 +105,7 @@ describe('stage', () => {
 
     let stage = await db.getActiveStage(guildId);
 
-    await startStageTimer(stage, guildId);
+    await startStageTimer(null, stage, guildId);
     endStageTimer(guildId);
 
     stage = await db.getActiveStage(guildId);
@@ -109,7 +132,7 @@ describe('stage', () => {
     let stage = await db.getActiveStage(guildId);
 
     // Start stage timer
-    await startStageTimer(stage, guildId, 50);
+    await startStageTimer(null, stage, guildId, 50);
     await pause(250);
 
     // Expect new stage has started

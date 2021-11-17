@@ -37,6 +37,7 @@ export function init() {
     db.createIndex('stages', { 'id': 1, 'guildId': 1 }, { unique: true, name: 'compositePrimaryKey' });
     db.createIndex('stages', { 'active': 1 }, { name: 'active' });
     db.createIndex('stages', { 'order': 1 }, { name: 'order' });
+    db.createIndex('stages', { 'ended': 1 }, { name: 'ended' });
     db.createIndex('config', { 'guildId': 1 }, { name: 'guildId' });
   });
 }
@@ -261,6 +262,21 @@ export async function getStageByOrder(order, guildId) {
 async function getActiveStage(guildId) {
   const database = await getDatabase();
   return await database.collection('stages').findOne({ active: true, guildId: guildId });
+}
+
+export async function getPreviousStage(guildId) {
+  const database = await getDatabase();
+  const activeStage = await getActiveStage(guildId);
+  if (activeStage) {
+    // Get stage with the previous order
+    const prevStageOrder = activeStage.order - 1;
+    if (prevStageOrder >= 0) {
+      return await getStageByOrder(prevStageOrder, guildId);
+    }
+  } else {
+    // Get ended stage with the maximum order
+    return await database.collection('stages').findOne({ guildId, ended: true }, { sort: { order: -1 }, limit: 1 });
+  }
 }
 
 export async function startStage(id, guildId) {

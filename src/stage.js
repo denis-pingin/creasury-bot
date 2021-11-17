@@ -1,4 +1,5 @@
 import * as db from './db';
+import { sendInviteMessage } from './util';
 
 export function getStageEndTime(date) {
   if (!date) {
@@ -15,7 +16,7 @@ export function getStageEndTime(date) {
 
 const timers = {};
 
-export async function startStageTimer(stage, guildId, timeout = 1000) {
+export async function startStageTimer(client, stage, guildId, timeout = 1000) {
   let stageEndTime;
   if (!stage.endTime) {
     stageEndTime = getStageEndTime();
@@ -26,26 +27,37 @@ export async function startStageTimer(stage, guildId, timeout = 1000) {
     console.log(`Stage end time is already set to ${stageEndTime}`);
   }
 
-  startTimer(guildId, stageEndTime, stage, timeout);
+  startTimer(client, guildId, stageEndTime, stage, timeout);
   console.log(`Started timer for stage ${stage.id} and guild ${guildId}, ending at ${stageEndTime}`);
   return stageEndTime;
 }
 
-function startTimer(guildId, stageEndTime, stage, timeout) {
+function startTimer(client, guildId, stageEndTime, stage, timeout) {
   if (timers[guildId]) {
     console.log(`Stage timer for guild ${guildId} is already running!`);
     return;
   }
   timers[guildId] = setTimeout(async () => {
     // Check if time is up
-    if (Date.now() >= stageEndTime.getTime()) {
+    const now = Date.now();
+    const timeLeft = stageEndTime.getTime() - now;
+    if (timeLeft <= 0) {
       console.log(`Stage ${stage.id} ended!`);
       clearTimeout(timers[guildId]);
-      await switchStage(stage);
+      const nextStage = await switchStage(stage);
+
+      // Send new stage announcement
+      let message = `Big news, @everyone! Stage **${stage.id}** has ended and the results have been frozen.\n`;
+      message = `${message}To check your final results for the stage use the **/rank previous** command.`;
+      if (nextStage) {
+        message = `${message}\nAlso, a new stage **${nextStage.id}** has started, with the goal to reach **${nextStage.goals?.memberCount}** members. Good luck!`;
+      }
+      await sendInviteMessage(client, message);
+
       delete timers[guildId];
     } else {
       delete timers[guildId];
-      startTimer(guildId, stageEndTime, stage, timeout);
+      startTimer(client, guildId, stageEndTime, stage, timeLeft > timeout ? timeout : timeLeft);
     }
   }, timeout);
 }
