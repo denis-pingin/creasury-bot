@@ -71,7 +71,7 @@ export default async function handleGuildMemberAdd(client, member, inviter) {
 }
 
 function buildJoinMessage(member, addMemberResult) {
-  let message = `${getUserTag(member.user)} has ${addMemberResult.rejoin ? 're-' : ''}joined the Creasury community! :tada:\n`;
+  let message = `${getUserTag(member.user)} has ${addMemberResult.rejoin ? 're-' : ''}joined the Creasury community! :tada::tada::tada:\n`;
   if (addMemberResult.rejoin) {
     // Re-join
     message = `${message}They were invited by ${getInviterTag(addMemberResult.member.inviter)}.\n`;
