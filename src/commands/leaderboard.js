@@ -28,21 +28,13 @@ module.exports = {
 function printLeaderboard(stage, leaderboard) {
   let message = `-------------------- Current leaderboard for the stage **${stage.id}** --------------------\n`;
   leaderboard.forEach(entry => {
-    if (entry.me) {
-      message = `${message}**`;
-    }
-
     if (entry.type === 'spacer') {
       message = `${message}...\n`;
     } else {
-      message = `${message}${entry.position}. ${getUserTag(entry)} ${entry.points} ${entry.points === 1 ? 'point' : 'points'}, ${entry.level ? '**' + getRewardTag(stage, entry.level, true) + '**' : 'not enough points for a reward'}.`;
+      message = `${message}${entry.position}. ${getUserTag(entry)} ${entry.points} ${entry.points === 1 ? 'point' : 'points'}, ${entry.level ? '**' + getRewardTag(stage, entry.level) + '** candidate' : 'not enough points for a reward'}.`;
       if (entry.me) {
         message = `${message} <== that's you!`;
       }
-    }
-
-    if (entry.me) {
-      message = `${message}**`;
     }
     message = `${message}\n`;
   });

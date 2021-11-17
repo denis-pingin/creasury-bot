@@ -16,25 +16,36 @@ export async function handleGlobalPoints(client, addMemberResult) {
   }
 }
 
-export async function handleStagePoints(stage, client, addMemberResult) {
+export async function handleStagePoints(guildConfig, stage, client, addMemberResult) {
   let message = '';
   const originalInviter = addMemberResult.member.originalInviter;
   if (originalInviter) {
+    // Check if the original inviter is excluded from ranking in the guild config
+    const excluded = guildConfig.excludedFromRanking.some(id => id === originalInviter.id);
+
     if (addMemberResult.member.fake) {
       await updateStageCounterAndLog(client, stage.id, 'fakeInvites', originalInviter, addMemberResult.member.guildId, 1);
-      message = `Minimum account age requirements weren't met (> ${config.minAccountAge} days), ${getUserTag(addMemberResult.member.originalInviter)} won't be awarded any points.`;
+      if (!excluded) {
+        message = `Minimum account age requirements weren't met (> ${config.minAccountAge} days), ${getUserTag(addMemberResult.member.originalInviter)} won't be awarded any points.`;
+      }
     } else if (addMemberResult.rejoin) {
       const originalInviteTimestamp = addMemberResult.member.originalInviteTimestamp;
       if (originalInviteTimestamp < stage.startedAt) {
         await sendLogMessage(client, `${getUserTag(addMemberResult.member.user)} originally joined before the current stage has started, no points will be awarded.`);
-        message = `${getUserTag(addMemberResult.member.user)} originally joined before the current stage has started, ${getUserTag(addMemberResult.member.originalInviter)} won't be awarded any points.`;
+        if (!excluded) {
+          message = `${getUserTag(addMemberResult.member.user)} originally joined before the current stage has started, ${getUserTag(addMemberResult.member.originalInviter)} won't be awarded any points.`;
+        }
       } else {
         const points = await updateStageCounterAndLog(client, stage.id, 'points', originalInviter, addMemberResult.member.guildId, 1);
-        message = `${getUserTag(addMemberResult.member.originalInviter)} just gained 1 point and now has ${points} ${points === 1 ? 'point' : 'points'} in total.`;
+        if (!excluded) {
+          message = `${getUserTag(addMemberResult.member.originalInviter)} just gained 1 point and now has ${points} ${points === 1 ? 'point' : 'points'} in total.`;
+        }
       }
     } else {
       const points = await updateStageCounterAndLog(client, stage.id, 'points', originalInviter, addMemberResult.member.guildId, 1);
-      message = `${getUserTag(addMemberResult.member.originalInviter)} just gained 1 point and now has ${points} ${points === 1 ? 'point' : 'points'} in total.`;
+      if (!excluded) {
+        message = `${getUserTag(addMemberResult.member.originalInviter)} just gained 1 point and now has ${points} ${points === 1 ? 'point' : 'points'} in total.`;
+      }
     }
   } else {
     await sendLogMessage(client, `Original inviter of member ${getUserTag(addMemberResult.member.user)} is unknown, no stage points will be awarded.`);

@@ -37,6 +37,7 @@ export function init() {
     db.createIndex('stages', { 'id': 1, 'guildId': 1 }, { unique: true, name: 'compositePrimaryKey' });
     db.createIndex('stages', { 'active': 1 }, { name: 'active' });
     db.createIndex('stages', { 'order': 1 }, { name: 'order' });
+    db.createIndex('config', { 'guildId': 1 }, { name: 'guildId' });
   });
 }
 
@@ -58,30 +59,21 @@ async function getDatabase() {
   return connection.db(config.dbName);
 }
 
-async function getOriginalInviter(member) {
+export async function getConfig(guildId) {
   const database = await getDatabase();
-  const membersCollection = database.collection('members');
-
-  const result = await membersCollection.findOne({ id: member.user.id, guildId: member.guild.id });
-  if (result?.originalInviter) {
-    console.log(`Found original inviter for member ${getUserTag(member.user)}: ${getUserTag(result.originalInviter)}.`);
-    return result.originalInviter;
-  } else {
-    console.log(`Warning: inviter for member ${getUserTag(member.user)} not found.`);
+  const result = await database.collection('config').findOneAndUpdate({ guildId }, {
+    $set: {
+      guildId: guildId,
+    },
+  }, {
+    upsert: true,
+    returnDocument: ReturnDocument.AFTER,
+  });
+  const guildConfig = result.value;
+  if (!guildConfig.excludedFromRanking) {
+    guildConfig.excludedFromRanking = [];
   }
-}
-
-async function getInviter(member) {
-  const database = await getDatabase();
-  const invitesCollection = database.collection('members');
-
-  const result = await invitesCollection.findOne({ id: member.user.id, guildId: member.guild.id });
-  if (result?.inviter) {
-    console.log(`Found inviter for member ${getUserTag(member.user)}: ${getUserTag(result.inviter)}.`);
-    return result.inviter;
-  } else {
-    console.log(`Warning: inviter for member ${getUserTag(member.user)} not found.`);
-  }
+  return guildConfig;
 }
 
 export async function getStagePoints(userId, guildId) {
@@ -310,8 +302,6 @@ export async function updateStageEndTime(id, guildId, time) {
 export {
   getConnection,
   getDatabase,
-  getOriginalInviter,
-  getInviter,
   addMember,
   removeMember,
   updateCounter,

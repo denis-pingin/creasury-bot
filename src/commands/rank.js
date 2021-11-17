@@ -19,7 +19,7 @@ module.exports = {
       if (rank) {
         if (rank.level) {
           // Some level
-          message = `You have **${rank.points}** ${rank.points === 1 ? 'point' : 'points'} and your rank is **${rank.position}**. You are a ${getRewardTag(stage, rank.level, true)}.`;
+          message = `You have **${rank.points}** ${rank.points === 1 ? 'point' : 'points'} and your rank is **${rank.position}**. You are a ${getRewardTag(stage, rank.level)} candidate.`;
         } else {
           // No level
           message = `You have **${rank.points}** ${rank.points === 1 ? 'point' : 'points'} and your rank is **${rank.position}**. You need to work harder to earn a reward.`;

@@ -9,6 +9,9 @@ import { startStageTimer } from '../stage';
 export default async function handleGuildMemberAdd(client, member, inviter) {
   const fake = Date.now() - member.user.createdAt < 1000 * 60 * 60 * 24 * config.minAccountAge;
 
+  // Get guild config
+  const guildConfig = await db.getConfig(member.guild.id);
+
   // Add member
   const addMemberResult = await db.addMember(member, inviter, fake);
 
@@ -32,10 +35,12 @@ export default async function handleGuildMemberAdd(client, member, inviter) {
     await sendLogMessage(client, 'No active stage found, won\'t award any stage points.');
   } else {
     // Update stage counters
-    const stageMessage = await handleStagePoints(stage, client, addMemberResult);
+    const stageMessage = await handleStagePoints(guildConfig, stage, client, addMemberResult);
 
     // Compute rankings
-    const members = await member.guild.members.fetch();
+    let members = await member.guild.members.fetch();
+    members = members.filter(m => !m.user.bot && !guildConfig.excludedFromRanking.some(id => id === m.user.id));
+    // console.log('Members for ranking:', members);
     await computeRankings(members, stage, member.guild.id);
 
     // Add current stage points of the original inviter to the join event

@@ -7,6 +7,7 @@ export async function clearData() {
   await database.collection('memberCounters').deleteMany({});
   await database.collection('stages').deleteMany({});
   await database.collection('stageRankings').deleteMany({});
+  await database.collection('config').deleteMany({});
 }
 
 export function generateMembers(count, guildId) {

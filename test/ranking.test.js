@@ -14,6 +14,7 @@ const guildId = '1';
 const members = generateMembers(32, guildId);
 const stages = JSON.parse(fs.readFileSync(`${__dirname}/data/stages.json`));
 const rankings = JSON.parse(fs.readFileSync(`${__dirname}/data/rankings.json`));
+const config = JSON.parse(fs.readFileSync(`${__dirname}/data/config.json`));
 
 describe('compute rankings', () => {
   let connection;
@@ -31,6 +32,7 @@ describe('compute rankings', () => {
     const database = await getDatabase();
     await database.collection('stages').insertMany(stages);
     await database.collection('stageRankings').insertOne(rankings);
+    await database.collection('config').insertOne(config);
   });
 
   test('member rank', async () => {

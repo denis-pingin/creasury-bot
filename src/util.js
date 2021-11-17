@@ -36,8 +36,8 @@ export function getUserTag(user) {
   return `<@${user.id}>`;
 }
 
-export function getRewardTag(stage, level, candidate) {
-  const addition = `${ stage.number === 1 ? 'I' : stage.number === 2 ? 'II' : '' }${ candidate ? ' candidate' : '' }`;
+export function getRewardTag(stage, level) {
+  const addition = `${ stage.number === 1 ? 'I' : stage.number === 2 ? 'II' : '' }`;
   switch (level) {
     case 1: return `${stage.rewardName} Rookie ${addition}`;
     case 2: return `${stage.rewardName} Master ${addition}`;

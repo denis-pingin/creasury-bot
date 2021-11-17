@@ -174,7 +174,6 @@ export async function getLeaderboard(stage, user, guildId) {
   }
 }
 
-
 export async function computeRankings(members, stage, guildId) {
   console.log('Starting computing rankings...');
   const startTime = Date.now();
@@ -182,7 +181,6 @@ export async function computeRankings(members, stage, guildId) {
   const database = await db.getDatabase();
 
   let memberPoints = await Promise.all(members
-    .filter(member => !member.user.bot)
     .map(async member => {
       const result = await database.collection('memberCounters').findOne({ id: member.user.id, guildId: guildId }, { projection: { [`${stage.id}.points`]: true } });
       const points = result ? result[stage.id] ? result[stage.id].points | 0 : 0 : 0;
