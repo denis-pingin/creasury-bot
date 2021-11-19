@@ -1,4 +1,4 @@
-import { getUserTag } from './util';
+import { getUserTag, logObject } from './util';
 import { config } from './config';
 
 export async function handleInviteCreate(invite) {
@@ -26,7 +26,7 @@ export function init(client) {
           console.log('Invites cached.');
         })
         .catch(err => {
-          console.log('OnReady Error:', err);
+          logObject('OnReady error:', err);
         });
     });
 }

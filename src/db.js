@@ -358,7 +358,7 @@ export async function assignReward(userId, guildId, reward) {
 export async function updateStageRewardState(stageId, guildId, level, reward, state) {
   const database = await getDatabase();
 
-  const result = await database.collection('stages').findOneAndUpdate({ id: stageId, guildId: guildId }, {
+  await database.collection('stages').updateOne({ id: stageId, guildId: guildId }, {
     $pull: {
       [`rewards.pending.${level}`]: {
         id: reward.id,
@@ -369,9 +369,7 @@ export async function updateStageRewardState(stageId, guildId, level, reward, st
     },
   }, {
     upsert: true,
-    returnDocument: ReturnDocument.AFTER,
   });
-  return result.value;
 }
 
 export async function getMemberRewards(userId, guildId) {

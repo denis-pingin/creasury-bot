@@ -1,0 +1,120 @@
+{
+  "distributed": [
+    {
+      "type": "achievements",
+      "id": "Pioneer Rookie I",
+      "distribution": "guaranteed",
+      "winners": [
+        "5",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "6",
+        "12"
+      ],
+      "distributionDetails": [
+        {
+          "type": "guaranteed",
+          "winner": "5"
+        },
+        {
+          "type": "guaranteed",
+          "winner": "7"
+        },
+        {
+          "type": "guaranteed",
+          "winner": "8"
+        },
+        {
+          "type": "guaranteed",
+          "winner": "9"
+        },
+        {
+          "type": "guaranteed",
+          "winner": "10"
+        },
+        {
+          "type": "guaranteed",
+          "winner": "11"
+        },
+        {
+          "type": "guaranteed",
+          "winner": "6"
+        },
+        {
+          "type": "guaranteed",
+          "winner": "12"
+        }
+      ]
+    },
+    {
+      "type": "creasuryButterflies",
+      "id": "Creasury Butterfly",
+      "distribution": "simple-lottery",
+      "winners": [
+        "8"
+      ],
+      "distributionDetails": [
+        {
+          "type": "simple-lottery",
+          "winner": "8",
+          "participantCount": 8,
+          "ticketCount": 8,
+          "winningTicket": 2
+        }
+      ]
+    },
+    {
+      "type": "whitelistSpots",
+      "id": "Early Presale Whitelist Spot",
+      "distribution": "simple-lottery",
+      "winners": [
+        "9",
+        "7",
+        "10",
+        "11",
+        "5"
+      ],
+      "distributionDetails": [
+        {
+          "type": "simple-lottery",
+          "winner": "9",
+          "participantCount": 7,
+          "ticketCount": 7,
+          "winningTicket": 2
+        },
+        {
+          "type": "simple-lottery",
+          "winner": "7",
+          "participantCount": 6,
+          "ticketCount": 6,
+          "winningTicket": 1
+        },
+        {
+          "type": "simple-lottery",
+          "winner": "10",
+          "participantCount": 5,
+          "ticketCount": 5,
+          "winningTicket": 1
+        },
+        {
+          "type": "simple-lottery",
+          "winner": "11",
+          "participantCount": 4,
+          "ticketCount": 4,
+          "winningTicket": 1
+        },
+        {
+          "type": "simple-lottery",
+          "winner": "5",
+          "participantCount": 3,
+          "ticketCount": 3,
+          "winningTicket": 0
+        }
+      ]
+    }
+  ],
+  "unclaimed": []
+}

@@ -1,10 +1,10 @@
 import * as db from './db';
-import { getUserTag, markdownEscape } from './util';
+import { getUserTag, logObject, markdownEscape } from './util';
 
 export async function distributeLevelRewards(stage, rankings, level, guildId) {
   console.log(`Initiating reward distribution for the stage "${stage.id}" and level ${level} in guild ${guildId}`);
 
-  console.log('Rankings:', rankings);
+  logObject('Rankings:', rankings);
 
   // Get rewards
   const rewards = stage.rewards?.pending[level];
@@ -12,11 +12,11 @@ export async function distributeLevelRewards(stage, rankings, level, guildId) {
     console.log('No pending rewards for this level.');
     return;
   }
-  console.log('Rewards:', rewards);
+  logObject('Rewards:', rewards);
 
   level = parseInt(level);
   const candidates = getCandidates(rankings, level, stage);
-  console.log('Candidates:', candidates);
+  logObject('Candidates:', candidates);
 
   // Result object
   const result = {
@@ -27,44 +27,43 @@ export async function distributeLevelRewards(stage, rankings, level, guildId) {
   // For all rewards
   for (let i = 0; i < rewards.length; i++) {
     const reward = rewards[i];
-    console.log('Reward:', reward);
+    reward.stage = stage.id;
+    logObject('Reward:', reward);
 
     // There are candidates
     if (candidates.length > 0) {
       // Assign reward based on distribution
+      let distributionResult;
       switch (reward.distribution) {
         case 'guaranteed':
-          reward.winners = await distributeGuaranteedReward(candidates, reward, guildId);
+          distributionResult = await distributeGuaranteedReward(candidates, reward, guildId);
           break;
         case 'weighted-lottery':
-          reward.winners = await distributeLotteryReward(candidates, reward, guildId, true);
+          distributionResult = await distributeLotteryReward(candidates, reward, guildId, true);
           break;
         case 'simple-lottery':
-          reward.winners = await distributeLotteryReward(candidates, reward, guildId, false);
+          distributionResult = await distributeLotteryReward(candidates, reward, guildId, false);
           break;
         default:
           console.warn(`Unexpected reward distribution: ${reward.distribution}`);
       }
 
       // Move reward from pending to distributed
-      const distributedReward = { ...reward };
-      delete distributedReward.supply;
-      await db.updateStageRewardState(stage.id, guildId, level, distributedReward, 'distributed');
+      const distributedReward = await markRewardAsDistributed(reward, distributionResult, stage, guildId, level);
       result.distributed.push(distributedReward);
+      logObject('Distributed reward:', distributedReward);
 
       // Save unclaimed reward
       if (reward.supply) {
-        const unclaimedReward = { ...reward };
-        delete unclaimedReward.winners;
-        await db.updateStageRewardState(stage.id, guildId, level, unclaimedReward, 'unclaimed');
+        const unclaimedReward = await markRewardAsUnclaimed(reward, stage, guildId, level);
         result.unclaimed.push(unclaimedReward);
-        console.log(`${unclaimedReward.supply} rewards of type "${unclaimedReward.id}" left as there were not enough candidates, marked as unclaimed.`);
+        logObject('Unclaimed reward (not enough candidates):', unclaimedReward);
       }
     } else {
       // Move reward from pending to unclaimed
-      await db.updateStageRewardState(stage.id, guildId, level, reward, 'unclaimed');
-      result.unclaimed.push(reward);
-      console.log(`No candidates for the reward "${markdownEscape(reward.id)}", marked as unclaimed.`);
+      const unclaimedReward = await markRewardAsUnclaimed(reward, stage, guildId, level);
+      result.unclaimed.push(unclaimedReward);
+      logObject('Unclaimed reward (no candidates):', unclaimedReward);
     }
   }
 
@@ -79,26 +78,26 @@ function getCandidates(rankings, level, stage) {
     if (stage.rewards.distributed && stage.rewards.distributed[2]) {
       // Get level 2 candidates
       let l2Candidates = rankings.rankings.filter(rank => rank.level === 2);
-      console.log('L2 candidates:', l2Candidates);
+      logObject('L2 candidates:', l2Candidates);
 
       // Get level 2 distributed rewards
       let l2DistributedRewards = stage.rewards.distributed[2];
-      console.log('L2 distributed rewards:', l2DistributedRewards);
+      logObject('L2 distributed rewards:', l2DistributedRewards);
 
       // Filter out guaranteed rewards
       l2DistributedRewards = l2DistributedRewards.filter(reward => reward.distribution !== 'guaranteed');
-      console.log('L2 limited supply rewards:', l2DistributedRewards);
+      logObject('L2 limited supply rewards:', l2DistributedRewards);
 
       // Determine level 2 winners
       const l2Winners = [];
       for (let i = 0; i < l2DistributedRewards.length; i++) {
         l2Winners.push(...l2DistributedRewards[i].winners);
       }
-      console.log('L2 winners:', l2Winners);
+      logObject('L2 winners:', l2Winners);
 
       // Remove level 2 winners from candidates
       l2Candidates = l2Candidates.filter(candidate => l2Winners.some(winner => winner.id === candidate.id));
-      console.log('Eligible L2 candidates:', l2Candidates);
+      logObject('Eligible L2 candidates:', l2Candidates);
 
       // Merge candidates
       candidates = [...candidates, ...l2Candidates];
@@ -110,11 +109,14 @@ function getCandidates(rankings, level, stage) {
 }
 
 export async function distributeGuaranteedReward(candidates, reward, guildId) {
-  return Promise.all(candidates.map(async candidate => {
+  const winners = await Promise.all(candidates.map(async candidate => {
     await db.assignReward(candidate.id, guildId, reward);
     console.log(`Reward ${markdownEscape(reward.id)} was assigned to user ${getUserTag(candidate)}`);
     return candidate.id;
   }));
+  return winners.map(winner => {
+    return { type: 'guaranteed', winner };
+  });
 }
 
 export async function distributeLotteryReward(candidates, reward, guildId, weighted) {
@@ -122,34 +124,42 @@ export async function distributeLotteryReward(candidates, reward, guildId, weigh
     console.error('Distributing a lottery reward needs non-zero limited supply');
     return [];
   }
+  let results = [];
   if (reward.supply < candidates.length) {
     // Supply is less than the amount of candidates
-    const winners = [];
     while (reward.supply > 0) {
-      // Conduct lottery
-      let winner;
+      // Conduct the lottery
+      let lotteryResult;
       if (weighted) {
-        winner = conductWeightedLottery(candidates, reward, guildId);
+        lotteryResult = conductWeightedLottery(candidates, reward, guildId);
       } else {
-        winner = conductSimpleLottery(candidates, reward, guildId);
+        lotteryResult = conductSimpleLottery(candidates, reward, guildId);
       }
-      winners.push(winner);
+      logObject('Lottery result:', lotteryResult);
+
+      // Accumulate winners
+      results.push(lotteryResult);
 
       // Assign reward to user
-      await db.assignReward(winner, guildId, reward);
-      console.log(`Reward ${markdownEscape(reward.id)} was assigned to user ${getUserTag({ id: winner })}`);
+      await db.assignReward(lotteryResult.winner, guildId, reward);
+      console.log(`Reward ${markdownEscape(reward.id)} was assigned to user ${getUserTag({ id: lotteryResult.winner })}`);
 
       // Reduce supply
       reward.supply--;
 
       // Remove winner from candidates
-      candidates.splice(candidates.findIndex(candidate => candidate.id === winner), 1);
-      console.log('Updated candidates:', candidates);
+      candidates.splice(candidates.findIndex(candidate => candidate.id === lotteryResult.winner), 1);
+      logObject('Updated candidates:', candidates);
     }
-    return winners;
   } else {
     // Supply is either unlimited or there is enough for everyone
-    const winners = await distributeGuaranteedReward(candidates, reward, guildId);
+    results = await distributeGuaranteedReward(candidates, reward, guildId);
+    results = results.map(result => {
+      return {
+        ...result,
+        type: 'assigned',
+      };
+    });
 
     // Update reward supply
     reward.supply -= candidates.length;
@@ -157,8 +167,8 @@ export async function distributeLotteryReward(candidates, reward, guildId, weigh
     // No candidates left if all rewards distributed
     candidates.length = 0;
 
-    return winners;
   }
+  return results;
 }
 
 export function conductWeightedLottery(candidates, reward) {
@@ -172,7 +182,13 @@ export function conductWeightedLottery(candidates, reward) {
   const winner = tickets[winningTicket];
   console.log(`The winning ticket is #${winningTicket} and the winner is ${getUserTag({ id: winner })}`);
 
-  return winner;
+  return {
+    type: 'weighted-lottery',
+    winner: winner,
+    participantCount: candidates.length,
+    ticketCount: ticketCount,
+    winningTicket: winningTicket,
+  };
 }
 
 export function conductSimpleLottery(candidates, reward) {
@@ -182,7 +198,13 @@ export function conductSimpleLottery(candidates, reward) {
   const winner = candidates[winningTicket].id;
   console.log(`The winning ticket is #${winningTicket} and the winner is ${getUserTag({ id: winner })}`);
 
-  return winner;
+  return {
+    type: 'simple-lottery',
+    winner: winner,
+    participantCount: candidates.length,
+    ticketCount: candidates.length,
+    winningTicket: winningTicket,
+  };
 }
 
 function getTickets(candidates) {
@@ -196,4 +218,21 @@ function getTickets(candidates) {
     currentTicket += candidate.points;
   }
   return tickets;
+}
+
+async function markRewardAsDistributed(reward, distributionResult, stage, guildId, level) {
+  const distributedReward = { ...reward };
+  distributedReward.winners = distributionResult.map(r => r.winner);
+  distributedReward.distributionDetails = distributionResult;
+  delete distributedReward.supply;
+  delete distributedReward.stage;
+  await db.updateStageRewardState(stage.id, guildId, level, distributedReward, 'distributed');
+  return distributedReward;
+}
+
+async function markRewardAsUnclaimed(reward, stage, guildId, level) {
+  const unclaimedReward = { ...reward };
+  delete unclaimedReward.stage;
+  await db.updateStageRewardState(stage.id, guildId, level, unclaimedReward, 'unclaimed');
+  return unclaimedReward;
 }

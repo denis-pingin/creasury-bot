@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import * as db from '../db';
 import { getRankings } from '../ranking';
-import { getUserTag, markdownEscape, sendLogMessage } from '../util';
+import { getUserTag, logObject, markdownEscape, sendLogMessage } from '../util';
 import { config } from '../config';
 import { distributeLevelRewards } from '../distribution';
 
@@ -42,7 +42,7 @@ export async function execute(interaction) {
 
   try {
     const results = await distributeLevelRewards(stage, rankings, level, interaction.guildId);
-    console.log('Distribution results:', results);
+    logObject('Distribution results:', results);
     const message = buildInviteMessage(stage, level, results);
     interaction.reply(message);
   } catch (e) {

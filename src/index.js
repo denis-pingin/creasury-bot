@@ -2,7 +2,7 @@ import 'regenerator-runtime/runtime.js';
 import { config } from './config';
 import { Client, Collection, Intents } from 'discord.js';
 import * as fs from 'fs';
-import { getUserTag, sendLogMessage } from './util';
+import { getUserTag, logObject, sendLogMessage } from './util';
 import handleGuildMemberAdd from './events/guildMemberAdd';
 import handleGuildMemberRemove from './events/guildMemberRemove';
 import * as inviteTracker from './invite-tracker';
@@ -36,7 +36,7 @@ client.once('ready', async () => {
 
     await handleInit(client, config.guildId);
   } catch (err) {
-    console.log('OnReady Error:', err);
+    logObject('OnReady error:', err);
   }
 });
 
@@ -48,7 +48,7 @@ client.on('inviteCreate', async invite => {
 
     await sendLogMessage(client, `A new invite code ${invite.code} was created by ${getUserTag(invite.inviter)} for channel <#${invite.channel.id}>.`);
   } catch (err) {
-    console.log('OnInviteCreate Error:', err);
+    logObject('OnInviteCreate error:', err);
   }
 });
 
@@ -62,7 +62,7 @@ client.on('guildMemberAdd', async member => {
 
     await handleGuildMemberAdd(client, member, inviter);
   } catch (err) {
-    console.log('OnGuildMemberAdd Error:', err);
+    logObject('OnGuildMemberAdd error:', err);
   }
 });
 
@@ -74,7 +74,7 @@ client.on('guildMemberRemove', async member => {
 
     await handleGuildMemberRemove(client, member);
   } catch (err) {
-    console.log('OnGuildMemberRemove Error:', err);
+    logObject('OnGuildMemberRemove error:', err);
   }
 });
 

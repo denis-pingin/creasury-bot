@@ -1,4 +1,5 @@
 import { config } from './config';
+import * as util from 'util';
 
 export async function sendInviteMessage(client, message) {
   console.log(`#invites: ${message}`);
@@ -49,4 +50,8 @@ export function getRewardTag(stage, level) {
 
 export function markdownEscape(text) {
   return text.replace(/(_|\*|~|`|\|)/g, '\\$1');
+}
+
+export function logObject(message, object) {
+  console.log(message, util.inspect(object, { showHidden: false, depth: null, colors: true }));
 }

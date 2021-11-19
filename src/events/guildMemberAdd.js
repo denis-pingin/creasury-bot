@@ -40,7 +40,7 @@ export default async function handleGuildMemberAdd(client, member, inviter) {
 
     // Get members for ranking
     const members = await guild.getMembers(member.guild, guildConfig);
-    // console.log('Members for ranking:', members);
+    // logObject('Members for ranking:', members);
 
     // Compute rankings
     await computeRankings(members, stage, member.guild.id);

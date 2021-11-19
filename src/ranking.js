@@ -1,5 +1,5 @@
 import * as db from './db';
-import { getUserTag } from './util';
+import { getUserTag, logObject } from './util';
 
 export async function getMemberRanking(userId, stageId, guildId) {
   // Get stage rankings
@@ -27,7 +27,7 @@ export async function getLeaderboard(stage, user, guildId) {
     const levels = {};
 
     const rankingTable = rankings.rankings;
-    console.log('Rankings:', rankingTable);
+    logObject('Rankings:', rankingTable);
 
     for (let level = 5; level > 0; level--) {
 
@@ -63,7 +63,7 @@ export async function getLeaderboard(stage, user, guildId) {
       }
       levels[level] = { requiredPoints, cutoffIndex };
     }
-    // console.log('Levels:', levels);
+    // logObject('Levels:', levels);
 
 
     let leaderboard = [];
@@ -129,7 +129,7 @@ export async function getLeaderboard(stage, user, guildId) {
         }
       }
     }
-    // console.log('Leaderboard:', leaderboard);
+    // logObject('Leaderboard:', leaderboard);
 
     for (let i = 0; i < leaderboard.length; i++) {
       const entry = leaderboard[i];
@@ -157,7 +157,7 @@ export async function getLeaderboard(stage, user, guildId) {
         }
       }
     }
-    // console.log('Marked leaderboard:', leaderboard);
+    // logObject('Marked leaderboard:', leaderboard);
 
     leaderboard = leaderboard.filter((entry, index) => {
       if (entry.delete ||
@@ -167,7 +167,7 @@ export async function getLeaderboard(stage, user, guildId) {
       }
       return true;
     });
-    console.log('Leaderboard:', leaderboard);
+    logObject('Leaderboard:', leaderboard);
     return leaderboard;
   } else {
     console.log(`Rankings for the stage ${stage.id} and guild ${guildId} not found`);
@@ -190,16 +190,16 @@ export async function computeRankings(members, stage, guildId) {
       };
     }));
   memberPoints = memberPoints.sort((a, b) => a.points > b.points ? -1 : 1);
-  // console.log('Member points', memberPoints);
+  // logObject('Member points:', memberPoints);
 
   const l2Candidates = memberPoints.filter(val => val.points >= stage.levels['2'].minPoints);
-  // console.log('Level 2 candidates', l2Candidates);
+  // logObject('Level 2 candidates:', l2Candidates);
 
   const l2CutoffIndex = Math.floor(l2Candidates.length / 3);
-  // console.log('Level 2 cutoff index', l2CutoffIndex);
+  // logObject('Level 2 cutoff index:', l2CutoffIndex);
 
   memberPoints = await sortMembers(memberPoints);
-  // console.log('Sorted members', memberPoints);
+  // logObject('Sorted members:', memberPoints);
 
   const rankings = [];
   for (let i = 0; i < memberPoints.length; i++) {
@@ -211,7 +211,7 @@ export async function computeRankings(members, stage, guildId) {
       position: i + 1,
     });
   }
-  // console.log('Rankings', rankings);
+  // logObject('Rankings:', rankings);
 
   await db.updateStageRankings(stage, rankings, guildId);
 
@@ -242,7 +242,7 @@ async function sortMembers(memberPoints) {
       }
     }
   }
-  // console.log('Fetched timestamps', memberPoints);
+  // logObject('Fetched timestamps', memberPoints);
 
   // Sort members based on points and timestamps
   return memberPoints.sort((a, b) => {

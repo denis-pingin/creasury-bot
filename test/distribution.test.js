@@ -6,11 +6,13 @@ import {
   distributeGuaranteedReward, distributeLevelRewards, distributeLotteryReward,
 } from '../src/distribution';
 import * as db from '../src/db';
+import { logObject } from '../src/util';
+import { loadDataFile } from './test-util';
 
 const stageId = 'Newborn Butterflies: Stage 1';
 const guildId = '1';
-const stages = JSON.parse(fs.readFileSync(`${__dirname}/data/stages.json`));
-const rankings = JSON.parse(fs.readFileSync(`${__dirname}/data/rankings.json`));
+const stages = loadDataFile('data/stages.json');
+const rankings = loadDataFile('data/rankings.json');
 
 describe('reward', () => {
   let connection;
@@ -41,11 +43,12 @@ describe('reward', () => {
       distribution: 'guaranteed',
     };
     const candidates = rankings.rankings.filter(rank => rank.level === 1);
-    const winners = await distributeGuaranteedReward(candidates, reward, guildId);
-    expect(winners).toBeTruthy();
-    expect(winners.length).toBe(candidates.length);
-    for (const i in winners) {
-      const memberRewards = await db.getMemberRewards(winners[i], guildId);
+    const results = await distributeGuaranteedReward(candidates, reward, guildId);
+    logObject('Results:', results);
+    expect(results).toBeTruthy();
+    expect(results.length).toBe(candidates.length);
+    for (const i in results) {
+      const memberRewards = await db.getMemberRewards(results[i].winner, guildId);
       expect(memberRewards).toBeTruthy();
       expect(memberRewards[reward.type]).toBeTruthy();
       expect(memberRewards[reward.type].length).toBe(1);
@@ -65,16 +68,22 @@ describe('reward', () => {
     jest.spyOn(global.Math, 'random')
       .mockReturnValue(0.5);
 
-    const winners = await distributeLotteryReward(candidates, reward, guildId, true);
+    const results = await distributeLotteryReward(candidates, reward, guildId, true);
+    logObject('Results:', results);
     expect(reward.supply).toBe(0);
-    console.log(winners);
-    expect(winners).toBeTruthy();
-    expect(winners.length).toBe(2);
-    expect(winners[0]).toBe('9');
-    expect(winners[1]).toBe('10');
-    for (const i in winners) {
+    expect(results).toBeTruthy();
+    expect(results.length).toBe(2);
+    expect(results[0].winner).toBe('9');
+    expect(results[0].participantCount).toBe(8);
+    expect(results[0].ticketCount).toBe(15);
+    expect(results[0].winningTicket).toBe(7);
+    expect(results[1].winner).toBe('10');
+    expect(results[1].participantCount).toBe(7);
+    expect(results[1].ticketCount).toBe(13);
+    expect(results[1].winningTicket).toBe(6);
+    for (const i in results) {
       // Validate member rewards
-      const memberRewards = await db.getMemberRewards(winners[i], guildId);
+      const memberRewards = await db.getMemberRewards(results[i].winner, guildId);
       console.log(memberRewards);
       expect(memberRewards).toBeTruthy();
       expect(memberRewards[reward.type]).toBeTruthy();
@@ -95,13 +104,21 @@ describe('reward', () => {
     jest.spyOn(global.Math, 'random')
       .mockReturnValue(0.5);
 
-    const winners = await distributeLotteryReward(candidates, reward, guildId, false);
+    const results = await distributeLotteryReward(candidates, reward, guildId, false);
+    logObject('Results:', results);
     expect(reward.supply).toBe(0);
-    console.log(winners);
-    expect(winners).toBeTruthy();
-    expect(winners.length).toBe(2);
-    for (const i in winners) {
-      const memberRewards = await db.getMemberRewards(winners[i], guildId);
+    expect(results).toBeTruthy();
+    expect(results.length).toBe(2);
+    expect(results[0].winner).toBe('10');
+    expect(results[0].participantCount).toBe(8);
+    expect(results[0].ticketCount).toBe(8);
+    expect(results[0].winningTicket).toBe(4);
+    expect(results[1].winner).toBe('9');
+    expect(results[1].participantCount).toBe(7);
+    expect(results[1].ticketCount).toBe(7);
+    expect(results[1].winningTicket).toBe(3);
+    for (const i in results) {
+      const memberRewards = await db.getMemberRewards(results[i].winner, guildId);
       expect(memberRewards).toBeTruthy();
       expect(memberRewards[reward.type]).toBeTruthy();
       expect(memberRewards[reward.type].length).toBe(1);
@@ -114,6 +131,7 @@ describe('reward', () => {
     let stage = await db.getStageById(stageId, guildId);
     const level = 5;
     const result = await distributeLevelRewards(stage, rankings, level, guildId);
+    logObject('Results:', result);
     expect(result).toBeTruthy();
     expect(result.distributed.length).toBe(3);
     expect(result.unclaimed.length).toBe(0);
@@ -135,10 +153,11 @@ describe('reward', () => {
   test('distribute reward level 4', async () => {
     let stage = await db.getStageById(stageId, guildId);
     const level = 4;
-    const result = await distributeLevelRewards(stage, rankings, level, guildId);
-    expect(result).toBeTruthy();
-    expect(result.distributed.length).toBe(3);
-    expect(result.unclaimed.length).toBe(0);
+    const results = await distributeLevelRewards(stage, rankings, level, guildId);
+    logObject('Results:', results);
+    expect(results).toBeTruthy();
+    expect(results.distributed.length).toBe(3);
+    expect(results.unclaimed.length).toBe(0);
 
     stage = await db.getStageById(stage.id, guildId);
     expect(stage.rewards.pending[level]).toStrictEqual([]);
@@ -150,16 +169,17 @@ describe('reward', () => {
       expect(stage.rewards.distributed[level][i].winners.length).toBe(1);
       expect(stage.rewards.distributed[level][i].winners[0]).toBe('3');
     }
-    expect(stage.rewards.distributed[level]).toStrictEqual(result.distributed);
+    expect(stage.rewards.distributed[level]).toStrictEqual(results.distributed);
   });
 
   test('distribute reward level 3', async () => {
     let stage = await db.getStageById(stageId, guildId);
     const level = 3;
-    const result = await distributeLevelRewards(stage, rankings, level, guildId);
-    expect(result).toBeTruthy();
-    expect(result.distributed.length).toBe(3);
-    expect(result.unclaimed.length).toBe(0);
+    const results = await distributeLevelRewards(stage, rankings, level, guildId);
+    logObject('Results:', results);
+    expect(results).toBeTruthy();
+    expect(results.distributed.length).toBe(3);
+    expect(results.unclaimed.length).toBe(0);
 
     stage = await db.getStageById(stage.id, guildId);
     expect(stage.rewards.pending[level]).toStrictEqual([]);
@@ -171,7 +191,7 @@ describe('reward', () => {
       expect(stage.rewards.distributed[level][i].winners.length).toBe(1);
       expect(stage.rewards.distributed[level][i].winners[0]).toBe('0');
     }
-    expect(stage.rewards.distributed[level]).toStrictEqual(result.distributed);
+    expect(stage.rewards.distributed[level]).toStrictEqual(results.distributed);
   });
 
   test('distribute reward level 2', async () => {
@@ -179,37 +199,17 @@ describe('reward', () => {
     jest.spyOn(global.Math, 'random')
       .mockReturnValue(0.3);
     const level = 2;
-    const result = await distributeLevelRewards(stage, rankings, level, guildId);
-    expect(result).toBeTruthy();
-    expect(result.distributed.length).toBe(3);
-    expect(result.unclaimed.length).toBe(1);
+    const results = await distributeLevelRewards(stage, rankings, level, guildId);
+    logObject('Results:', results);
+
+    const expectedResults = loadDataFile('data/distribution-level-2.json');
+    expect(results).toStrictEqual(expectedResults);
 
     stage = await db.getStageById(stage.id, guildId);
     expect(stage).toBeTruthy();
     expect(stage.rewards.pending[level]).toStrictEqual([]);
-    expect(stage.rewards.distributed[level]).toBeTruthy();
-    expect(stage.rewards.distributed[level].length).toBe(3);
-    expect(stage.rewards.unclaimed[level].length).toBe(1);
-
-    console.log(stage.rewards.distributed[level], stage.rewards.unclaimed[level]);
-
-    expect(stage.rewards.distributed[level][0].winners).toBeTruthy();
-    expect(stage.rewards.distributed[level][0].winners.length).toBe(2);
-    expect(stage.rewards.distributed[level][0].winners[0]).toBe('1');
-    expect(stage.rewards.distributed[level][0].winners[1]).toBe('4');
-
-    expect(stage.rewards.distributed[level][1].winners).toBeTruthy();
-    expect(stage.rewards.distributed[level][1].winners.length).toBe(1);
-    expect(stage.rewards.distributed[level][1].winners[0]).toBe('1');
-
-    expect(stage.rewards.distributed[level][2].winners).toBeTruthy();
-    expect(stage.rewards.distributed[level][2].winners.length).toBe(1);
-    expect(stage.rewards.distributed[level][2].winners[0]).toBe('4');
-
-    expect(stage.rewards.distributed[level]).toStrictEqual(result.distributed);
-
-    expect(stage.rewards.unclaimed[level][0].id).toBe('Early Presale Whitelist Spot');
-    expect(stage.rewards.unclaimed[level][0].supply).toBe(1);
+    expect(stage.rewards.distributed[level]).toStrictEqual(expectedResults.distributed);
+    expect(stage.rewards.unclaimed[level]).toStrictEqual(expectedResults.unclaimed);
   });
 
   test('fail to distribute reward for level 1 if level 2 not distributed', async () => {
@@ -226,27 +226,22 @@ describe('reward', () => {
     // First need to distribute level 2 rewards
     await distributeLevelRewards(stage, rankings, 2, guildId);
     stage = await db.getStageById(stageId, guildId);
-    console.log(stage);
 
     jest.spyOn(global.Math, 'random')
       .mockReturnValue(0.3);
 
     const level = 1;
-    const result = await distributeLevelRewards(stage, rankings, level, guildId);
-    expect(result).toBeTruthy();
+    const results = await distributeLevelRewards(stage, rankings, level, guildId);
+    logObject('Results:', results);
+    expect(results).toBeTruthy();
+
+    const expectedResults = loadDataFile('data/distribution-level-1.json');
+    expect(results).toStrictEqual(expectedResults);
 
     stage = await db.getStageById(stage.id, guildId);
     expect(stage).toBeTruthy();
     expect(stage.rewards.pending[level]).toStrictEqual([]);
-    expect(stage.rewards.distributed[level]).toBeTruthy();
-    expect(stage.rewards.distributed[level].length).toBe(3);
-
-    console.log(stage.rewards.distributed[level]);
-
-    expect(stage.rewards.distributed[level][0].winners).toStrictEqual(['5', '7', '8', '9', '10', '11', '6', '12']);
-    expect(stage.rewards.distributed[level][1].winners).toStrictEqual([ '8' ]);
-    expect(stage.rewards.distributed[level][2].winners).toStrictEqual([ '9', '7', '10', '11', '5' ]);
-
-    expect(stage.rewards.distributed[level]).toStrictEqual(result.distributed);
+    expect(stage.rewards.distributed[level]).toStrictEqual(expectedResults.distributed);
+    expect(stage.rewards.unclaimed[level]).toBeFalsy();
   });
 });
