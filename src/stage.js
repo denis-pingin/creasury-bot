@@ -1,5 +1,5 @@
 import * as db from './db';
-import { sendInviteMessage } from './util';
+import { sendInviteMessage, sendLogMessage } from './util';
 
 export function getStageEndTime(date) {
   if (!date) {
@@ -15,6 +15,25 @@ export function getStageEndTime(date) {
 }
 
 const timers = {};
+
+export async function checkStageGoal(client, stage, members) {
+  let message;
+  const memberGoal = stage.goals?.memberCount;
+  // Stage end time has not been set yet and there is a member goal
+  if (!stage.endTime && memberGoal) {
+    // Member goal reached
+    if (members.length >= memberGoal) {
+      await sendLogMessage(client, `The stage goal of ${memberGoal} members has been reached!`);
+
+      const stageEndTime = await startStageTimer(client, stage, stage.guildId, 10000);
+
+      message = `Congratulations, the stage goal of ${stage.goals.memberCount} members has been reached! :dart:\n\n`;
+      message = `${message}Great job, @everyone! :fire::fire::fire:\n\n`;
+      message = `${message}Stage **${stage.id}** will end at **${stageEndTime.toUTCString()}**. Hurry up, you can still earn points until then!\n`;
+    }
+  }
+  return message;
+}
 
 export async function startStageTimer(client, stage, guildId, timeout = 1000) {
   let stageEndTime;

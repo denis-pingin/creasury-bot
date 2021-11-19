@@ -1,6 +1,7 @@
 import { updateGlobalCounterAndLog, updateStageCounterAndLog } from './counters';
 import { getUserTag, sendLogMessage } from './util';
 import { config } from './config';
+import * as guild from './guild';
 
 export async function handleGlobalPoints(client, addMemberResult) {
   const originalInviter = addMemberResult.member.originalInviter;
@@ -21,7 +22,7 @@ export async function handleStagePoints(guildConfig, stage, client, addMemberRes
   const originalInviter = addMemberResult.member.originalInviter;
   if (originalInviter) {
     // Check if the original inviter is excluded from ranking in the guild config
-    const excluded = guildConfig.excludedFromRanking.some(id => id === originalInviter.id);
+    const excluded = guild.excludedFromRanking(originalInviter.id, guildConfig);
 
     if (addMemberResult.member.fake) {
       await updateStageCounterAndLog(client, stage.id, 'fakeInvites', originalInviter, addMemberResult.member.guildId, 1);

@@ -51,7 +51,12 @@ module.exports = {
       }
     }
 
-    await interaction.reply(message);
+    await interaction.reply({
+      content: message,
+      allowedMentions: {
+        users: [],
+      },
+    });
   },
 };
 

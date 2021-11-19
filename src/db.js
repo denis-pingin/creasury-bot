@@ -123,17 +123,24 @@ export async function updateJoinEvent(userId, timestamp, stagePoints) {
   });
 }
 
-export async function initMember(user, guildId) {
+export async function initMembers(members) {
   const database = await getDatabase();
-  await database.collection('members').updateOne({ id: user.id, guildId: guildId }, {
-    $set: {
-      id: user.id,
-      guildId,
-      user,
-    },
-  }, {
-    upsert: true,
+  const bulkOp = database.collection('members').initializeUnorderedBulkOp();
+
+  members.forEach(member => {
+    bulkOp.find({ id: member.user.id, guildId: member.guild.id }).upsert().updateOne({
+      $set: {
+        id: member.user.id,
+        guildId: member.guild.id,
+        user: member.user,
+      },
+    });
   });
+
+  if (members.length > 0) {
+    const result = await bulkOp.execute();
+    return result.upserted;
+  }
 }
 
 async function addMember(member, inviter, fake) {

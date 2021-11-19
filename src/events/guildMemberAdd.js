@@ -4,7 +4,8 @@ import { config } from '../config';
 import { updateGlobalCounterAndLog } from '../counters';
 import { handleGlobalPoints, handleStagePoints } from '../scoring';
 import { computeRankings } from '../ranking';
-import { startStageTimer } from '../stage';
+import { checkStageGoal } from '../stage';
+import * as guild from '../guild';
 
 export default async function handleGuildMemberAdd(client, member, inviter) {
   const fake = Date.now() - member.user.createdAt < 1000 * 60 * 60 * 24 * config.minAccountAge;
@@ -37,10 +38,11 @@ export default async function handleGuildMemberAdd(client, member, inviter) {
     // Update stage counters
     const stageMessage = await handleStagePoints(guildConfig, stage, client, addMemberResult);
 
-    // Compute rankings
-    let members = await member.guild.members.fetch();
-    members = members.filter(m => !m.user.bot && !guildConfig.excludedFromRanking.some(id => id === m.user.id));
+    // Get members for ranking
+    const members = await guild.getMembers(member.guild, guildConfig);
     // console.log('Members for ranking:', members);
+
+    // Compute rankings
     await computeRankings(members, stage, member.guild.id);
 
     // Add current stage points of the original inviter to the join event
@@ -52,24 +54,11 @@ export default async function handleGuildMemberAdd(client, member, inviter) {
     // Append stage message
     message = `${message}\n${stageMessage}`;
 
-    // Check if goal reached
-    const memberCount = member.guild.memberCount;
-    const memberGoal = stage.goals?.memberCount;
-    if (!stage.endTime && memberGoal) {
-      let stageGoalMessage;
-      if (memberCount >= memberGoal) {
-        const stageEndTime = await startStageTimer(client, stage, member.guild.id, 10000);
+    // Check stage goal
+    const stageGoalMessage = await checkStageGoal(client, stage, members);
 
-        stageGoalMessage = `Congratulations, the stage goal of ${stage.goals.memberCount} members has been reached! :dart:\n`;
-        stageGoalMessage = 'Great job, @everyone! :fire::fire::fire:\n\n';
-        stageGoalMessage = `${stageGoalMessage}Stage **${stage.id}** will end at **${stageEndTime.toUTCString()}**. Hurry up, you can still earn points until then!\n`;
-      } else {
-        stageGoalMessage = `${stage.goals.memberCount} more ${stage.goals.memberCount === 1 ? 'member' : 'members'} to reach the stage goal.\n`;
-      }
-
-      // Append goal message
-      message = `${message}\n${stageGoalMessage}`;
-    }
+    // Append stage goal message
+    message = `${message}\n${stageGoalMessage ? stageGoalMessage : ''}`;
   }
 
   // Send invite message

@@ -4,13 +4,13 @@ import handleGuildMemberRemove from '../src/events/guildMemberRemove';
 import { strict as assert } from 'assert';
 import { MongoClient } from 'mongodb';
 import fs from 'fs';
-import { generateMembers } from './test-util';
+import { generateMembers, loadDataFile } from './test-util';
 import * as db from '../src/db';
 
 const stage = 'Newborn Butterflies: Stage 1';
 const guildId = '1';
 const members = generateMembers(3, guildId);
-const stages = JSON.parse(fs.readFileSync(`${__dirname}/data/stages.json`));
+const stages = loadDataFile('data/stages.json');
 
 // Fake account
 members[2].user.createdAt = Date.now();

@@ -58,7 +58,7 @@ export function buildInviteMessage(stage, level, results) {
       const reward = results.distributed[i];
       if (reward.winners && reward.winners.length > 0) {
         const winnerTags = reward.winners.map(winner => `${getUserTag({ id: winner })}`);
-        message = `${message}Reward **${markdownEscape(reward.id)}** ${reward.winners.length === 1 ? 'winner is' : 'winners are'}: ${winnerTags}!\n\n`;
+        message = `${message}Reward **${markdownEscape(reward.id)}** ${reward.winners.length === 1 ? 'winner is' : 'winners are'}: ${winnerTags}. Congratulations!!! :tada::tada::tada:\n\n`;
       } else {
         // No winners
         message = `${message}Reward **${markdownEscape(reward.id)}** winners could not yet be determined.\n\n`;
