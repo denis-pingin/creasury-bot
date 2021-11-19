@@ -1,11 +1,9 @@
 'use strict';
 import 'regenerator-runtime/runtime';
 import * as db from '../src/db';
-import { getDatabase, setConnection } from '../src/db';
 import { MongoClient } from 'mongodb';
 import * as fs from 'fs';
 import { strict as assert } from 'assert';
-import { clearData } from './test-util';
 import { endStageTimer, getStageEndTime, startStageTimer, switchStage } from '../src/stage';
 
 const stageId = 'Newborn Butterflies: Stage 1';
@@ -23,12 +21,12 @@ describe('stage', () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    setConnection(connection);
+    db.setConnection(connection);
   });
 
   beforeEach(async () => {
-    await clearData();
-    const database = await getDatabase();
+    await db.clearData();
+    const database = await db.getDatabase();
     await database.collection('stages').insertMany(stages);
   });
 

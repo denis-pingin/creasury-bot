@@ -52,7 +52,7 @@ export default async function handleGuildMemberAdd(client, member, inviter) {
     // Append stage message
     message = `${message}\n${stageMessage}`;
 
-    // Member count goal
+    // Check if goal reached
     const memberCount = member.guild.memberCount;
     const memberGoal = stage.goals?.memberCount;
     if (!stage.endTime && memberGoal) {
@@ -60,14 +60,15 @@ export default async function handleGuildMemberAdd(client, member, inviter) {
       if (memberCount >= memberGoal) {
         const stageEndTime = await startStageTimer(client, stage, member.guild.id, 10000);
 
-        stageGoalMessage = `Congratulations, the stage goal of ${stage.goal.memberCount} members has been reached!\n`;
+        stageGoalMessage = `Congratulations, the stage goal of ${stage.goals.memberCount} members has been reached! :dart:\n`;
+        stageGoalMessage = 'Great job, @everyone! :fire::fire::fire:\n\n';
         stageGoalMessage = `${stageGoalMessage}Stage **${stage.id}** will end at **${stageEndTime.toUTCString()}**. Hurry up, you can still earn points until then!\n`;
       } else {
-        stageGoalMessage = `Still ${stage.goal.memberCount} ${stage.goal.memberCount === 1 ? 'member' : 'members'} to go to reach the stage goal!\n`;
+        stageGoalMessage = `${stage.goals.memberCount} more ${stage.goals.memberCount === 1 ? 'member' : 'members'} to reach the stage goal.\n`;
       }
 
-      // Append goal reached
-      message = `${message}\n\n${stageGoalMessage}\n`;
+      // Append goal message
+      message = `${message}\n${stageGoalMessage}`;
     }
   }
 
@@ -76,9 +77,10 @@ export default async function handleGuildMemberAdd(client, member, inviter) {
 }
 
 function buildJoinMessage(member, addMemberResult) {
-  let message = `${getUserTag(member.user)} has ${addMemberResult.rejoin ? 're-' : ''}joined the Creasury community! :tada::tada::tada:\n`;
+  let message;
   if (addMemberResult.rejoin) {
     // Re-join
+    message = `${getUserTag(member.user)} has re-joined the Creasury community, welcome back! :tada:\n`;
     message = `${message}They were invited by ${getInviterTag(addMemberResult.member.inviter)}.\n`;
     if (addMemberResult.member.inviter?.id !== addMemberResult.member.originalInviter?.id) {
       // Re-join from a different inviter
@@ -86,7 +88,8 @@ function buildJoinMessage(member, addMemberResult) {
     }
   } else {
     // First time join
-    message = `${message}They were invited by ${getInviterTag(addMemberResult.member.originalInviter)}.\n`;
+    message = `${getUserTag(member.user)} has joined the Creasury community! :tada::tada::tada:\n`;
+    message = `${message}They were invited by ${getInviterTag(addMemberResult.member.originalInviter)}, who is a hero! :trophy:\n`;
   }
   return message;
 }

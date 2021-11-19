@@ -41,8 +41,12 @@ export function getRewardTag(stage, level) {
   switch (level) {
     case 1: return `${stage.rewardName} Rookie ${addition}`;
     case 2: return `${stage.rewardName} Master ${addition}`;
-    case 3: return `${stage.rewardName} Champion * ${addition}`;
-    case 4: return `${stage.rewardName} Champion ** ${addition}`;
-    case 5: return `${stage.rewardName} Champion *** ${addition}`;
+    case 3: return markdownEscape(`${stage.rewardName} Champion * ${addition}`);
+    case 4: return markdownEscape(`${stage.rewardName} Champion ** ${addition}`);
+    case 5: return markdownEscape(`${stage.rewardName} Champion *** ${addition}`);
   }
+}
+
+export function markdownEscape(text) {
+  return text.replace(/(_|\*|~|`|\|)/g, '\\$1');
 }

@@ -2,29 +2,23 @@ import { config } from './config';
 
 import { MongoClient, ReturnDocument } from 'mongodb';
 import { getUserTag } from './util';
-import fs from 'fs';
 
 const cache = {};
 
 export function init() {
-  let clean = false;
-  process.argv.forEach(function(val, index) {
-    if (index > 1 && val === '--clean-db') {
-      clean = true;
-    }
-  });
+  // let clean = false;
+  // process.argv.forEach(function(val, index) {
+  //   if (index > 1 && val === '--clean-db') {
+  //     clean = true;
+  //   }
+  // });
 
-  getDatabase().then(db => {
-    if (clean) {
-      db.collection('events').deleteMany({});
-      db.collection('members').deleteMany({});
-      db.collection('memberCounters').deleteMany({});
-      db.collection('stages').deleteMany({});
-      db.collection('stageRankings').deleteMany({});
-
-      const stages = JSON.parse(fs.readFileSync(`${__dirname}/../data/stages-dev.json`));
-      db.collection('stages').insertMany(stages);
-    }
+  getDatabase().then(async db => {
+    // if (clean) {
+    //   await clearData();
+    //   const stages = JSON.parse(fs.readFileSync(`${__dirname}/../data/dev/stages.json`));
+    //   db.collection('stages').insertMany(stages);
+    // }
 
     db.createIndex('members', { 'id': 1, 'guildId': 1 }, { unique: true, name: 'compositePrimaryKey' });
     db.createIndex('memberCounters', { 'id': 1, 'guildId': 1 }, { unique: true, name: 'compositePrimaryKey' });
@@ -39,7 +33,19 @@ export function init() {
     db.createIndex('stages', { 'order': 1 }, { name: 'order' });
     db.createIndex('stages', { 'ended': 1 }, { name: 'ended' });
     db.createIndex('config', { 'guildId': 1 }, { name: 'guildId' });
+    db.createIndex('rewards', { 'id': 1, 'guildId': 1 }, { unique: true, name: 'compositePrimaryKey' });
   });
+}
+
+export async function clearData() {
+  const database = await getDatabase();
+  await database.collection('events').deleteMany({});
+  await database.collection('members').deleteMany({});
+  await database.collection('memberCounters').deleteMany({});
+  await database.collection('stages').deleteMany({});
+  await database.collection('stageRankings').deleteMany({});
+  await database.collection('config').deleteMany({});
+  await database.collection('rewards').deleteMany({});
 }
 
 export function setConnection(connection) {
@@ -254,14 +260,19 @@ function getObjectFieldValue(field, value) {
   return field.split('.').reduce((prev, cur) => prev ? prev[cur] : undefined, value);
 }
 
+export async function getStageById(id, guildId) {
+  const database = await getDatabase();
+  return await database.collection('stages').findOne({ id, guildId });
+}
+
 export async function getStageByOrder(order, guildId) {
   const database = await getDatabase();
-  return await database.collection('stages').findOne({ order: order, guildId: guildId });
+  return await database.collection('stages').findOne({ order, guildId });
 }
 
 async function getActiveStage(guildId) {
   const database = await getDatabase();
-  return await database.collection('stages').findOne({ active: true, guildId: guildId });
+  return await database.collection('stages').findOne({ active: true, guildId });
 }
 
 export async function getPreviousStage(guildId) {
@@ -313,6 +324,52 @@ export async function updateStageEndTime(id, guildId, time) {
       endTime: time,
     },
   });
+}
+
+export async function assignReward(userId, guildId, reward) {
+  const database = await getDatabase();
+
+  // Remove the supply property
+  reward = { ...reward };
+  delete reward.supply;
+
+  const result = await database.collection('rewards').findOneAndUpdate({ id: userId, guildId: guildId }, {
+    $set: {
+      id: userId,
+      guildId: guildId,
+    },
+    $push: {
+      [reward.type]: reward,
+    },
+  }, {
+    upsert: true,
+    returnDocument: ReturnDocument.AFTER,
+  });
+  return result.value;
+}
+
+export async function updateStageRewardState(stageId, guildId, level, reward, state) {
+  const database = await getDatabase();
+
+  const result = await database.collection('stages').findOneAndUpdate({ id: stageId, guildId: guildId }, {
+    $pull: {
+      [`rewards.pending.${level}`]: {
+        id: reward.id,
+      },
+    },
+    $push: {
+      [`rewards.${state}.${level}`]: reward,
+    },
+  }, {
+    upsert: true,
+    returnDocument: ReturnDocument.AFTER,
+  });
+  return result.value;
+}
+
+export async function getMemberRewards(userId, guildId) {
+  const database = await getDatabase();
+  return await database.collection('rewards').findOne({ id: userId, guildId: guildId });
 }
 
 export {

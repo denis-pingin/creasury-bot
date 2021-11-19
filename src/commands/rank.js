@@ -49,11 +49,10 @@ module.exports = {
           // Some level
           let tadas = '';
           for (let i = 0; i < rank.level; i++) tadas = `${tadas}:tada:`;
-
-          message = `You have **${rank.points}** ${rank.points === 1 ? 'point' : 'points'} and your rank is **${rank.position}**. You are a **${getRewardTag(stage, rank.level)}** ${stage.ended ? tadas : 'candidate!'}`;
+          message = `Stage **${stage.id}**: you have **${rank.points}** ${rank.points === 1 ? 'point' : 'points'} and your rank is **${rank.position}**. You are a **${getRewardTag(stage, rank.level)}** ${stage.ended ? tadas : 'candidate!'}`;
         } else {
           // No level
-          message = `You have **${rank.points}** ${rank.points === 1 ? 'point' : 'points'} and your rank is **${rank.position}**. ${stage.ended ? 'You have no achievements in this stage' : 'You need to work harder to earn a reward'}.`;
+          message = `Stage **${stage.id}**: You have **${rank.points}** ${rank.points === 1 ? 'point' : 'points'} and your rank is **${rank.position}**. ${stage.ended ? 'You have no achievements in this stage' : 'You need to work harder to earn a reward'}.`;
         }
       } else {
         message = `Ranking table for the stage **${stage.id}** does not exist yet.`;

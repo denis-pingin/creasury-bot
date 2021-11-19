@@ -1,11 +1,11 @@
 import 'regenerator-runtime/runtime';
 import handleGuildMemberAdd from '../src/events/guildMemberAdd';
 import handleGuildMemberRemove from '../src/events/guildMemberRemove';
-import { getDatabase, setConnection } from '../src/db';
 import { strict as assert } from 'assert';
 import { MongoClient } from 'mongodb';
 import fs from 'fs';
-import { clearData, generateMembers } from './test-util';
+import { generateMembers } from './test-util';
+import * as db from '../src/db';
 
 const stage = 'Newborn Butterflies: Stage 1';
 const guildId = '1';
@@ -23,13 +23,13 @@ describe('join and leave events', () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    setConnection(connection);
+    db.setConnection(connection);
   });
 
   beforeEach(async () => {
-    await clearData();
+    await db.clearData();
 
-    const database = await getDatabase();
+    const database = await db.getDatabase();
     await database.collection('stages').insertMany(stages);
   });
 
@@ -40,7 +40,7 @@ describe('join and leave events', () => {
     // Add member
     await handleGuildMemberAdd(null, member, inviter);
 
-    const database = await getDatabase();
+    const database = await db.getDatabase();
     let data = await database.collection('members').findOne({ id:member.user.id, guildId });
     assert.notEqual(data, null);
     assert.equal(data.fake, false);
@@ -77,7 +77,7 @@ describe('join and leave events', () => {
     // Add fake member
     await handleGuildMemberAdd(null, fakeMember, inviter);
 
-    const database = await getDatabase();
+    const database = await db.getDatabase();
     let data = await database.collection('members').findOne({ id: fakeMember.user.id, guildId });
     assert.notEqual(data, null);
     assert.equal(data.id, fakeMember.user.id);
@@ -120,7 +120,7 @@ describe('join and leave events', () => {
     // Re-join
     await handleGuildMemberAdd(null, member, inviter);
 
-    const database = await getDatabase();
+    const database = await db.getDatabase();
     let data = await database.collection('members').findOne({ id: member.user.id, guildId });
     assert.equal(data.fake, false);
     assert.notEqual(data.inviteTimestamp, undefined);
@@ -161,7 +161,7 @@ describe('join and leave events', () => {
     // Add member without inviter
     await handleGuildMemberAdd(null, member, undefined);
 
-    const database = await getDatabase();
+    const database = await db.getDatabase();
     let data = await database.collection('members').findOne({ id: member.user.id, guildId });
     assert.notEqual(data, null);
     assert.equal(data.fake, false);
@@ -196,7 +196,7 @@ describe('join and leave events', () => {
     await handleGuildMemberAdd(null, member, inviter);
 
     // Simulate member's originalInviteTimestamp before stage start
-    const database = await getDatabase();
+    const database = await db.getDatabase();
     await database.collection('members').findOneAndUpdate({ id: member.user.id, guildId }, { $set: { originalInviteTimestamp: 0 } });
 
     await verifyJoinEvent(member.user.id, inviter.id, false, 1);
@@ -227,7 +227,7 @@ describe('join and leave events', () => {
 });
 
 async function verifyCounters(id, totalInvites, regularInvites, regularLeaves, fakeInvites, fakeLeaves, stagePoints) {
-  const database = await getDatabase();
+  const database = await db.getDatabase();
   const data = await database.collection('memberCounters').findOne({ id: id, guildId: guildId });
   assert.notEqual(data, null);
   assert.equal(data.global.totalInvites, totalInvites);
@@ -239,7 +239,7 @@ async function verifyCounters(id, totalInvites, regularInvites, regularLeaves, f
 }
 
 async function verifyJoinEvent(userId, inviterId, fake, stagePoints) {
-  const database = await getDatabase();
+  const database = await db.getDatabase();
   const data = await database.collection('events').findOne({ guildId: guildId, type: 'join', 'user.id': userId, 'inviter.id': inviterId }, { sort: { timestamp: -1 }, limit: 1 });
   assert.notEqual(data, null);
   assert.equal(data.fake, fake);
@@ -247,7 +247,7 @@ async function verifyJoinEvent(userId, inviterId, fake, stagePoints) {
 }
 
 async function verifyLeaveEvent(userId, inviterId) {
-  const database = await getDatabase();
+  const database = await db.getDatabase();
   const data = await database.collection('events').findOne({ guildId: guildId, type: 'leave', 'user.id': userId, 'inviter.id': inviterId }, { sort: { timestamp: -1 }, limit: 1 });
   assert.notEqual(data, undefined);
 }

@@ -61,9 +61,11 @@ function printLeaderboard(stage, leaderboard) {
     if (entry.type === 'spacer') {
       message = `${message}...\n`;
     } else {
-      message = `${message}${entry.position}. ${getUserTag(entry)} ${entry.points} ${entry.points === 1 ? 'point' : 'points'}, ${entry.level ? '**' + getRewardTag(stage, entry.level) + '** candidate' : 'not enough points for a reward'}.`;
+      message = `${message}${entry.position}. ${getUserTag(entry)} ${entry.points} ${entry.points === 1 ? 'point' : 'points'}, ${entry.level ? `**${getRewardTag(stage, entry.level)}**${stage.ended ? '' : ' candidate'}` : 'not enough points for an achievement'}`;
       if (entry.me) {
         message = `${message} <== that's you!`;
+      } else {
+        message = `${message}.`;
       }
     }
     message = `${message}\n`;

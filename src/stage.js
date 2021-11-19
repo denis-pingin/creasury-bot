@@ -48,9 +48,9 @@ function startTimer(client, guildId, stageEndTime, stage, timeout) {
 
       // Send new stage announcement
       let message = `Big news, @everyone! Stage **${stage.id}** has ended and the results have been frozen.\n`;
-      message = `${message}To check your final results for the stage use the **/rank previous** command.`;
+      message = `${message}To check your final score use the **/rank previous** command.\n\n`;
       if (nextStage) {
-        message = `${message}\nAlso, a new stage **${nextStage.id}** has started, with the goal to reach **${nextStage.goals?.memberCount}** members. Good luck!`;
+        message = `${message}Not less important than that, a new stage **${nextStage.id}** has started, with the goal to reach **${nextStage.goals?.memberCount}** members. Good luck!\n`;
       }
       await sendInviteMessage(client, message);
 

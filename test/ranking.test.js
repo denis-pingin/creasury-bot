@@ -1,13 +1,12 @@
 import 'regenerator-runtime/runtime';
-import { getDatabase, setConnection } from '../src/db';
+import * as db from '../src/db';
 import { MongoClient } from 'mongodb';
 import * as fs from 'fs';
 import { computeRankings, getLeaderboard, getMemberRanking } from '../src/ranking';
 import { strict as assert } from 'assert';
-import { clearData, generateMembers } from './test-util';
+import { generateMembers } from './test-util';
 import handleGuildMemberAdd from '../src/events/guildMemberAdd';
 import handleGuildMemberRemove from '../src/events/guildMemberRemove';
-import * as db from '../src/db';
 
 const stageId = 'Newborn Butterflies: Stage 1';
 const guildId = '1';
@@ -24,12 +23,12 @@ describe('compute rankings', () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    setConnection(connection);
+    db.setConnection(connection);
   });
 
   beforeEach(async () => {
-    await clearData();
-    const database = await getDatabase();
+    await db.clearData();
+    const database = await db.getDatabase();
     await database.collection('stages').insertMany(stages);
     await database.collection('stageRankings').insertOne(rankings);
     await database.collection('config').insertOne(config);

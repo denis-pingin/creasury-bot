@@ -1,0 +1,20 @@
+{
+  "distributed": [],
+  "unclaimed": [
+    {
+      "type": "achievements",
+      "id": "Pioneer Champion ** I",
+      "distribution": "guaranteed"
+    },
+    {
+      "type": "creasuryButterflies",
+      "id": "Creasury Butterfly",
+      "distribution": "guaranteed"
+    },
+    {
+      "type": "whitelistSpots",
+      "id": "Early Presale Whitelist Spot",
+      "distribution": "guaranteed"
+    }
+  ]
+}

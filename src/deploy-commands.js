@@ -1,8 +1,8 @@
 import * as fs from 'fs';
+import { config } from './config';
 
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
-import { config } from './config';
 
 export function deployCommands() {
   const commandFiles = fs.readdirSync(`${__dirname}/commands`).filter(file => file.endsWith('.js'));
