@@ -13,7 +13,7 @@ export async function handleGlobalPoints(client, addMemberResult) {
       await updateGlobalCounterAndLog(client, 'totalInvites', originalInviter, addMemberResult.member.guildId, 1);
     }
   } else {
-    sendLogMessage(client, `Original inviter of member ${getUserTag(addMemberResult.member.user)} is unknown, no global points will be awarded.`);
+    await sendLogMessage(client, `Original inviter of member ${getUserTag(addMemberResult.member.user)} is unknown, no global points will be awarded.`);
   }
 }
 
