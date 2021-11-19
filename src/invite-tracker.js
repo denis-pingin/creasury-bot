@@ -1,6 +1,8 @@
 import { getUserTag, logObject } from './util';
 import { config } from './config';
 
+const guildInvites = new Map();
+
 export async function handleInviteCreate(invite) {
   const invites = await invite.guild.invites.fetch();
 
@@ -10,9 +12,6 @@ export async function handleInviteCreate(invite) {
   guildInvites.set(invite.guild.id, codeUses);
 }
 
-
-const guildInvites = new Map();
-
 export function init(client) {
   client.guilds.cache
     .filter(guild => guild.id === config.guildId)
@@ -20,6 +19,7 @@ export function init(client) {
       guild.invites.fetch()
         .then(invites => {
           const codeUses = new Map();
+          // logObject('Retrieved invites from Discord API:', invites);
           invites.each(inv => codeUses.set(inv.code, inv.uses));
 
           guildInvites.set(guild.id, codeUses);
@@ -36,6 +36,7 @@ export async function handleJoin(member) {
   const newInvites = await member.guild.invites.fetch();
 
   const usedInvite = newInvites.find(inv => cachedInvites.get(inv.code) < inv.uses);
+  // logObject('Used invite:', usedInvite);
   if (!usedInvite) {
     console.warn(`Inviter for member ${getUserTag(member.user)} could not be determined`, [...newInvites.values()].map(inv => inv.code), [...cachedInvites.keys()]);
   }

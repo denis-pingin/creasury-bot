@@ -4,64 +4,72 @@ import { getUserTag, logObject, markdownEscape } from './util';
 export async function distributeLevelRewards(stage, rankings, level, guildId) {
   console.log(`Initiating reward distribution for the stage "${stage.id}" and level ${level} in guild ${guildId}`);
 
-  logObject('Rankings:', rankings);
+  // logObject('Rankings:', rankings);
 
   // Get rewards
-  const rewards = stage.rewards?.pending[level];
-  if (!rewards) {
+  const pendingRewards = stage.rewards?.pending[level];
+  if (!pendingRewards) {
     console.log('No pending rewards for this level.');
     return;
   }
-  logObject('Rewards:', rewards);
+  logObject('Pending rewards:', pendingRewards);
 
   level = parseInt(level);
   const candidates = getCandidates(rankings, level, stage);
-  logObject('Candidates:', candidates);
+  console.log(`There are ${candidates.length} reward candidates`);
+  // logObject('Candidates:', candidates);
 
   // Result object
   const result = {
+    pending: [],
     distributed: [],
     unclaimed: [],
   };
 
   // For all rewards
-  for (let i = 0; i < rewards.length; i++) {
-    const reward = rewards[i];
-    reward.stage = stage.id;
-    logObject('Reward:', reward);
+  for (let i = 0; i < pendingRewards.length; i++) {
+    const rewardToDistribute = pendingRewards[i];
+    rewardToDistribute.stage = stage.id;
+    logObject('Distributing reward:', rewardToDistribute);
 
     // There are candidates
     if (candidates.length > 0) {
       // Assign reward based on distribution
       let distributionResult;
-      switch (reward.distribution) {
+      switch (rewardToDistribute.distribution) {
         case 'guaranteed':
-          distributionResult = await distributeGuaranteedReward(candidates, reward, guildId);
+          distributionResult = await distributeGuaranteedReward(candidates, rewardToDistribute, guildId);
           break;
         case 'weighted-lottery':
-          distributionResult = await distributeLotteryReward(candidates, reward, guildId, true);
+          distributionResult = await distributeLotteryReward(candidates, rewardToDistribute, guildId, true);
           break;
         case 'simple-lottery':
-          distributionResult = await distributeLotteryReward(candidates, reward, guildId, false);
+          distributionResult = await distributeLotteryReward(candidates, rewardToDistribute, guildId, false);
           break;
         default:
-          console.warn(`Unexpected reward distribution: ${reward.distribution}`);
+          console.warn(`Unexpected reward distribution value: ${rewardToDistribute.distribution}`);
       }
 
-      // Move reward from pending to distributed
-      const distributedReward = await markRewardAsDistributed(reward, distributionResult, stage, guildId, level);
-      result.distributed.push(distributedReward);
-      logObject('Distributed reward:', distributedReward);
+      if (distributionResult) {
+        // Move reward from pending to distributed
+        const distributedReward = await markRewardAsDistributed(rewardToDistribute, distributionResult, stage, guildId, level);
+        result.distributed.push(distributedReward);
+        logObject('Distributed reward:', distributedReward);
 
-      // Save unclaimed reward
-      if (reward.supply) {
-        const unclaimedReward = await markRewardAsUnclaimed(reward, stage, guildId, level);
-        result.unclaimed.push(unclaimedReward);
-        logObject('Unclaimed reward (not enough candidates):', unclaimedReward);
+        // Save unclaimed reward
+        if (rewardToDistribute.supply) {
+          const unclaimedReward = await markRewardAsUnclaimed(rewardToDistribute, stage, guildId, level);
+          result.unclaimed.push(unclaimedReward);
+          logObject('Unclaimed reward (not enough candidates):', unclaimedReward);
+        }
+      } else {
+        // If reward was not distributed, leave it pending
+        result.pending.push(rewardToDistribute);
+        logObject('Pending reward (unknown distribution mechanism):', rewardToDistribute);
       }
     } else {
       // Move reward from pending to unclaimed
-      const unclaimedReward = await markRewardAsUnclaimed(reward, stage, guildId, level);
+      const unclaimedReward = await markRewardAsUnclaimed(rewardToDistribute, stage, guildId, level);
       result.unclaimed.push(unclaimedReward);
       logObject('Unclaimed reward (no candidates):', unclaimedReward);
     }
@@ -78,26 +86,26 @@ function getCandidates(rankings, level, stage) {
     if (stage.rewards.distributed && stage.rewards.distributed[2]) {
       // Get level 2 candidates
       let l2Candidates = rankings.rankings.filter(rank => rank.level === 2);
-      logObject('L2 candidates:', l2Candidates);
+      // logObject('L2 candidates:', l2Candidates);
 
       // Get level 2 distributed rewards
       let l2DistributedRewards = stage.rewards.distributed[2];
-      logObject('L2 distributed rewards:', l2DistributedRewards);
+      // logObject('L2 distributed rewards:', l2DistributedRewards);
 
       // Filter out guaranteed rewards
       l2DistributedRewards = l2DistributedRewards.filter(reward => reward.distribution !== 'guaranteed');
-      logObject('L2 limited supply rewards:', l2DistributedRewards);
+      // logObject('L2 limited supply rewards:', l2DistributedRewards);
 
       // Determine level 2 winners
       const l2Winners = [];
       for (let i = 0; i < l2DistributedRewards.length; i++) {
         l2Winners.push(...l2DistributedRewards[i].winners);
       }
-      logObject('L2 winners:', l2Winners);
+      // logObject('L2 winners:', l2Winners);
 
       // Remove level 2 winners from candidates
       l2Candidates = l2Candidates.filter(candidate => l2Winners.some(winner => winner.id === candidate.id));
-      logObject('Eligible L2 candidates:', l2Candidates);
+      // logObject('Eligible L2 candidates:', l2Candidates);
 
       // Merge candidates
       candidates = [...candidates, ...l2Candidates];
@@ -149,7 +157,7 @@ export async function distributeLotteryReward(candidates, reward, guildId, weigh
 
       // Remove winner from candidates
       candidates.splice(candidates.findIndex(candidate => candidate.id === lotteryResult.winner), 1);
-      logObject('Updated candidates:', candidates);
+      // logObject('Updated candidates:', candidates);
     }
   } else {
     // Supply is either unlimited or there is enough for everyone

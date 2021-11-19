@@ -1,5 +1,5 @@
 import * as db from './db';
-import { getUserTag, logObject } from './util';
+import { getUserTag } from './util';
 
 export async function getMemberRanking(userId, stageId, guildId) {
   // Get stage rankings
@@ -21,13 +21,14 @@ export async function getRankings(stageId, guildId) {
 }
 
 export async function getLeaderboard(stage, user, guildId) {
-  console.log(`Getting leaderboard for stage "${stage.id}", user ${getUserTag(user)} and guild ${guildId}`);
+  console.log(`Retrieving leaderboard for stage "${stage.id}", user ${getUserTag(user)} and guild ${guildId}`);
   const rankings = await getRankings(stage.id, guildId);
   if (rankings) {
     const levels = {};
 
     const rankingTable = rankings.rankings;
-    logObject('Rankings:', rankingTable);
+    console.log(`There are ${rankingTable.length} members in the ranking table`);
+    // logObject('Rankings:', rankingTable);
 
     for (let level = 5; level > 0; level--) {
 
@@ -167,7 +168,7 @@ export async function getLeaderboard(stage, user, guildId) {
       }
       return true;
     });
-    logObject('Leaderboard:', leaderboard);
+    // logObject('Leaderboard:', leaderboard);
     return leaderboard;
   } else {
     console.log(`Rankings for the stage ${stage.id} and guild ${guildId} not found`);
@@ -175,7 +176,7 @@ export async function getLeaderboard(stage, user, guildId) {
 }
 
 export async function computeRankings(members, stage, guildId) {
-  console.log('Starting computing rankings...');
+  console.log('Starting to compute rankings...');
   const startTime = Date.now();
 
   const database = await db.getDatabase();
@@ -190,7 +191,7 @@ export async function computeRankings(members, stage, guildId) {
       };
     }));
   memberPoints = memberPoints.sort((a, b) => a.points > b.points ? -1 : 1);
-  logObject('Member points:', memberPoints);
+  // logObject('Member points:', memberPoints);
 
   const l2Candidates = memberPoints.filter(val => val.points >= stage.levels['2'].minPoints);
   // logObject('Level 2 candidates:', l2Candidates);
@@ -211,7 +212,7 @@ export async function computeRankings(members, stage, guildId) {
       position: i + 1,
     });
   }
-  logObject('Rankings:', rankings);
+  // logObject('Rankings:', rankings);
 
   await db.updateStageRankings(stage, rankings, guildId);
 
@@ -278,7 +279,7 @@ export function getNextLevelPoints(level, rankings, stage) {
       // Not the highest level
       const nextLevel = level + 1;
       const nextLevelRanking = rankings.rankings.filter(r => r.level === nextLevel);
-      logObject('Next level ranking:', nextLevelRanking);
+      // logObject('Next level ranking:', nextLevelRanking);
       if (nextLevelRanking.length > 0) {
         // There is a next level candidate
         return nextLevelRanking[nextLevelRanking.length - 1].points;

@@ -1,19 +1,18 @@
 import 'regenerator-runtime/runtime';
-import * as db from '../src/db';
+import { generateMembers, loadDataFile } from './test-util';
 import { MongoClient } from 'mongodb';
-import * as fs from 'fs';
+import * as db from '../src/db';
 import { computeRankings, getLeaderboard, getMemberRanking, getNextLevelPoints } from '../src/ranking';
-import { strict as assert } from 'assert';
-import { generateMembers } from './test-util';
 import handleGuildMemberAdd from '../src/events/guildMemberAdd';
+import * as assert from 'assert';
 import handleGuildMemberRemove from '../src/events/guildMemberRemove';
 
 const stageId = 'Newborn Butterflies: Stage 1';
 const guildId = '1';
 const members = generateMembers(32, guildId);
-const stages = JSON.parse(fs.readFileSync(`${__dirname}/data/stages.json`));
-const rankings = JSON.parse(fs.readFileSync(`${__dirname}/data/rankings.json`));
-const config = JSON.parse(fs.readFileSync(`${__dirname}/data/config.json`));
+const stages = loadDataFile('data/stages.json');
+const rankings = loadDataFile('data/rankings.json');
+const config = loadDataFile('data/config.json');
 
 describe('compute rankings', () => {
   let connection;

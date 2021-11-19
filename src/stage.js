@@ -26,6 +26,7 @@ export async function checkStageGoal(client, stage, members) {
       await sendLogMessage(client, `The stage goal of ${memberGoal} members has been reached!`);
 
       const stageEndTime = await startStageTimer(client, stage, stage.guildId, 10000);
+      await sendLogMessage(client, `Stage will end at ${stageEndTime}.`);
 
       message = `Congratulations, the stage goal of ${stage.goals.memberCount} members has been reached! :dart:\n\n`;
       message = `${message}Great job, @everyone! :fire::fire::fire:\n\n`;

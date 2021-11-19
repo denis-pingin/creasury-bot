@@ -5,13 +5,12 @@ import { MongoClient } from 'mongodb';
 import * as fs from 'fs';
 import { strict as assert } from 'assert';
 import { endStageTimer, getStageEndTime, startStageTimer, switchStage } from '../src/stage';
+import { pause } from './test-util';
 
 const stageId = 'Newborn Butterflies: Stage 1';
 const nextStageId = 'Newborn Butterflies: Stage 2';
 const guildId = '1';
 const stages = JSON.parse(fs.readFileSync(`${__dirname}/data/stages.json`));
-
-const pause = ms => new Promise(res => setTimeout(res, ms));
 
 describe('stage', () => {
   let connection;

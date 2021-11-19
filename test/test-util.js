@@ -11,3 +11,7 @@ export function generateMembers(count, guildId) {
 export function loadDataFile(path) {
   return JSON.parse(fs.readFileSync(`${__dirname}/${path}`));
 }
+
+export function pause(ms) {
+  return new Promise(res => setTimeout(res, ms));
+}

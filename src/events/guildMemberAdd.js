@@ -32,9 +32,7 @@ export default async function handleGuildMemberAdd(client, member, inviter) {
 
   // Check if there is an active stage
   const stage = await db.getActiveStage(member.guild.id);
-  if (!stage) {
-    await sendLogMessage(client, 'No active stage found, won\'t award any stage points.');
-  } else {
+  if (stage) {
     // Update stage counters
     const stageMessage = await handleStagePoints(guildConfig, stage, client, addMemberResult);
 
@@ -59,6 +57,8 @@ export default async function handleGuildMemberAdd(client, member, inviter) {
 
     // Append stage goal message
     message = `${message}\n${stageGoalMessage ? stageGoalMessage : ''}`;
+  } else {
+    await sendLogMessage(client, 'No active stage found, won\'t award any stage points.');
   }
 
   // Send invite message
