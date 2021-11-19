@@ -190,7 +190,7 @@ export async function computeRankings(members, stage, guildId) {
       };
     }));
   memberPoints = memberPoints.sort((a, b) => a.points > b.points ? -1 : 1);
-  // logObject('Member points:', memberPoints);
+  logObject('Member points:', memberPoints);
 
   const l2Candidates = memberPoints.filter(val => val.points >= stage.levels['2'].minPoints);
   // logObject('Level 2 candidates:', l2Candidates);
@@ -211,7 +211,7 @@ export async function computeRankings(members, stage, guildId) {
       position: i + 1,
     });
   }
-  // logObject('Rankings:', rankings);
+  logObject('Rankings:', rankings);
 
   await db.updateStageRankings(stage, rankings, guildId);
 
@@ -268,5 +268,27 @@ function getLevel(memberPoints, index, levels, cutoffIndex) {
     return 2;
   } else if (memberPoints[index].points >= levels['1'].minPoints) {
     return 1;
+  }
+}
+
+export function getNextLevelPoints(level, rankings, stage) {
+  if (level) {
+    // Some level
+    if (level < 5) {
+      // Not the highest level
+      const nextLevel = level + 1;
+      const nextLevelRanking = rankings.rankings.filter(r => r.level === nextLevel);
+      logObject('Next level ranking:', nextLevelRanking);
+      if (nextLevelRanking.length > 0) {
+        // There is a next level candidate
+        return nextLevelRanking[nextLevelRanking.length - 1].points;
+      } else {
+        // There is no next level candidate
+        return stage.levels[nextLevel].minPoints;
+      }
+    }
+  } else {
+    // No level
+    return stage.levels[1].minPoints;
   }
 }

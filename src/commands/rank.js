@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import * as db from '../db';
 import { getRewardTag } from '../util';
-import { getMemberRanking } from '../ranking';
+import { getNextLevelPoints, getRankings } from '../ranking';
 
 const STAGE_CURRENT = 'current';
 const STAGE_PREVIOUS = 'previous';
@@ -43,16 +43,28 @@ module.exports = {
     if (stage) {
       console.log(`Rank for the stage "${stage.id}" with levels:`, stage.levels);
 
-      const rank = await getMemberRanking(interaction.user.id, stage.id, interaction.guildId);
-      if (rank) {
-        if (rank.level) {
-          // Some level
-          let tadas = '';
-          for (let i = 0; i < rank.level; i++) tadas = `${tadas}:tada:`;
-          message = `Stage **${stage.id}**: you have **${rank.points}** ${rank.points === 1 ? 'point' : 'points'} and your rank is **${rank.position}**. You are a **${getRewardTag(stage, rank.level)}** ${stage.ended ? tadas : 'candidate!'}`;
+      const rankings = await getRankings(stage.id, interaction.guildId);
+      if (rankings) {
+        // Find member position
+        const position = rankings.rankings.findIndex((user) => user.id === interaction.user.id);
+        if (position >= 0) {
+          const rank = rankings.rankings[position];
+          const nextLevelPoints = getNextLevelPoints(rank.level, rankings, stage);
+
+          if (rank.level) {
+            // Some level
+            let tadas = '';
+            for (let i = 0; i < rank.level; i++) tadas = `${tadas}:tada:`;
+            message = `Stage **${stage.id}**: you have **${rank.points}** ${rank.points === 1 ? 'point' : 'points'} and your rank is **${rank.position}**. You are a **${getRewardTag(stage, rank.level)}** ${stage.ended ? tadas : 'candidate!'}\n`;
+          } else {
+            // No level
+            message = `Stage **${stage.id}**: You have **${rank.points}** ${rank.points === 1 ? 'point' : 'points'} and your rank is **${rank.position}**. ${stage.ended ? 'You have no achievements in this stage' : 'You need to work harder to earn a reward'}.\n`;
+          }
+          if (!stage.ended && nextLevelPoints) {
+            message = `${message}As of now, you need ${nextLevelPoints} more ${nextLevelPoints === 1 ? 'point' : 'points'} to reach the next level.`;
+          }
         } else {
-          // No level
-          message = `Stage **${stage.id}**: You have **${rank.points}** ${rank.points === 1 ? 'point' : 'points'} and your rank is **${rank.position}**. ${stage.ended ? 'You have no achievements in this stage' : 'You need to work harder to earn a reward'}.`;
+          message = 'Hmmm, cannot find you in the ranking table, this actually shouldn\'t happen. Sorry for that, please contact our support.';
         }
       } else {
         message = `Ranking table for the stage **${stage.id}** does not exist yet.`;
@@ -61,4 +73,3 @@ module.exports = {
     await interaction.reply(message);
   },
 };
-

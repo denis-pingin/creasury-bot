@@ -2,7 +2,7 @@ import 'regenerator-runtime/runtime';
 import * as db from '../src/db';
 import { MongoClient } from 'mongodb';
 import * as fs from 'fs';
-import { computeRankings, getLeaderboard, getMemberRanking } from '../src/ranking';
+import { computeRankings, getLeaderboard, getMemberRanking, getNextLevelPoints } from '../src/ranking';
 import { strict as assert } from 'assert';
 import { generateMembers } from './test-util';
 import handleGuildMemberAdd from '../src/events/guildMemberAdd';
@@ -139,6 +139,30 @@ describe('compute rankings', () => {
   test('leaderboard', async () => {
     const leaderboard = await getLeaderboard(stages.find(stage => stage.id === stageId), members[0].user.id, guildId);
     assert.notEqual(leaderboard, null);
+  });
+
+  test('next level points with no level', async () => {
+    expect(getNextLevelPoints(undefined, rankings, stages[0])).toBe(1);
+  });
+
+  test('next level points with level 1', async () => {
+    expect(getNextLevelPoints(1, rankings, stages[0])).toBe(2);
+  });
+
+  test('next level points with level 2', async () => {
+    expect(getNextLevelPoints(2, rankings, stages[0])).toBe(3);
+  });
+
+  test('next level points with level 3', async () => {
+    expect(getNextLevelPoints(3, rankings, stages[0])).toBe(3);
+  });
+
+  test('next level points with level 4', async () => {
+    expect(getNextLevelPoints(4, rankings, stages[0])).toBe(3);
+  });
+
+  test('next level points with level 5', async () => {
+    expect(getNextLevelPoints(5, rankings, stages[0])).toBeFalsy();
   });
 });
 
