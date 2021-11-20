@@ -2,7 +2,7 @@
   "name": "creasury-portal",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "./src/index.js",
   "scripts": {
     "babel": "babel ./src -d build --source-maps true",
     "lint": "eslint src --fix",

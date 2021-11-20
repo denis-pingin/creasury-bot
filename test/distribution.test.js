@@ -1,10 +1,7 @@
 'use strict';
 import 'regenerator-runtime/runtime';
 import { MongoClient } from 'mongodb';
-import * as fs from 'fs';
-import {
-  distributeGuaranteedReward, distributeLevelRewards, distributeLotteryReward,
-} from '../src/distribution';
+import { distributeGuaranteedReward, distributeLevelRewards, distributeLotteryReward } from '../src/distribution';
 import * as db from '../src/db';
 import { logObject } from '../src/util';
 import { loadDataFile } from './test-util';

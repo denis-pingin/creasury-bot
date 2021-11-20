@@ -2,7 +2,7 @@
 import 'regenerator-runtime/runtime';
 import { MongoClient } from 'mongodb';
 import * as db from '../src/db';
-import { loadDataFile } from './test-util';
+import { getMockGuild, loadDataFile } from './test-util';
 import { getMembers } from '../src/guild';
 
 const guildId = '1';
@@ -36,14 +36,7 @@ describe('guild', () => {
   });
 
   test('get members', async () => {
-    const guild = {
-      id: '1',
-      members: {
-        fetch: jest.fn(),
-      },
-    };
-    guild.members.fetch.mockReturnValueOnce(members);
-
+    const guild = getMockGuild(guildId, members);
     const result = await getMembers(guild, config);
     console.log('Members:', result);
     expect(result).toBeTruthy();

@@ -55,3 +55,7 @@ export function markdownEscape(text) {
 export function logObject(message, object) {
   console.log(message, util.inspect(object, { showHidden: false, depth: null, colors: true }));
 }
+
+export function pause(ms) {
+  return new Promise(res => setTimeout(res, ms));
+}

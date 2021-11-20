@@ -1,5 +1,5 @@
 import 'regenerator-runtime/runtime';
-import { generateMembers, loadDataFile } from './test-util';
+import { generateMembers, getMockClient, getMockGuild, loadDataFile } from './test-util';
 import { MongoClient } from 'mongodb';
 import * as db from '../src/db';
 import { computeRankings, getLeaderboard, getMemberRanking, getNextLevelPoints } from '../src/ranking';
@@ -9,10 +9,14 @@ import handleGuildMemberRemove from '../src/events/guildMemberRemove';
 
 const stageId = 'Newborn Butterflies: Stage 1';
 const guildId = '1';
-const members = generateMembers(32, guildId);
+const allMembers = generateMembers(32, guildId);
 const stages = loadDataFile('data/stages.json');
 const rankings = loadDataFile('data/rankings.json');
 const config = loadDataFile('data/config.json');
+const members = [allMembers[0]];
+const memberMap = {};
+const guild = getMockGuild(guildId, members);
+const client = getMockClient(guild);
 
 describe('compute rankings', () => {
   let connection;
@@ -34,82 +38,28 @@ describe('compute rankings', () => {
   });
 
   test('member rank', async () => {
-    let rank = await getMemberRanking(members[0].user.id, stageId, guildId);
+    let rank = await getMemberRanking(allMembers[0].user.id, stageId, guildId);
     verifyMemberRank(rank, 3, 3, 3);
 
-    rank = await getMemberRanking(members[1].user.id, stageId, guildId);
+    rank = await getMemberRanking(allMembers[1].user.id, stageId, guildId);
     verifyMemberRank(rank, 4, 3, 2);
 
-    rank = await getMemberRanking(members[2].user.id, stageId, guildId);
+    rank = await getMemberRanking(allMembers[2].user.id, stageId, guildId);
     verifyMemberRank(rank, 1, 3, 5);
   });
 
-  test('compute rank', async () => {
+  test.only('compute rank', async () => {
 
-    {
-      await handleGuildMemberAdd(null, members[1], members[0].user);
-      await handleGuildMemberAdd(null, members[2], members[0].user);
-      await handleGuildMemberAdd(null, members[3], members[0].user);
+    // Generate data
+    await processEvents();
+    // const database = await db.getDatabase();
+    // logObject('Events:', await database.collection('events').find({}).toArray());
 
-      await handleGuildMemberAdd(null, members[4], members[1].user);
-      await handleGuildMemberAdd(null, members[5], members[1].user);
-      await handleGuildMemberAdd(null, members[6], members[1].user);
-
-      await handleGuildMemberAdd(null, members[7], members[2].user);
-      await handleGuildMemberAdd(null, members[8], members[2].user);
-      await handleGuildMemberAdd(null, members[9], members[2].user);
-
-      await handleGuildMemberAdd(null, members[10], members[3].user);
-      await handleGuildMemberAdd(null, members[11], members[3].user);
-      await handleGuildMemberAdd(null, members[12], members[3].user);
-
-      await handleGuildMemberAdd(null, members[13], members[4].user);
-      await handleGuildMemberAdd(null, members[14], members[4].user);
-
-      await handleGuildMemberAdd(null, members[15], members[5].user);
-      await handleGuildMemberAdd(null, members[16], members[5].user);
-
-      await handleGuildMemberAdd(null, members[17], members[6].user);
-      await handleGuildMemberAdd(null, members[18], members[6].user);
-
-      await handleGuildMemberAdd(null, members[19], members[7].user);
-      await handleGuildMemberAdd(null, members[21], members[7].user);
-
-      await handleGuildMemberAdd(null, members[22], members[8].user);
-      await handleGuildMemberAdd(null, members[23], members[8].user);
-
-      await handleGuildMemberAdd(null, members[24], members[9].user);
-      await handleGuildMemberAdd(null, members[25], members[9].user);
-
-      await handleGuildMemberAdd(null, members[26], members[10].user);
-      await handleGuildMemberAdd(null, members[27], members[10].user);
-
-      await handleGuildMemberAdd(null, members[28], members[11].user);
-      await handleGuildMemberAdd(null, members[29], members[11].user);
-
-      await handleGuildMemberAdd(null, members[30], members[12].user);
-
-      // Re-join invited by member 0
-      await handleGuildMemberRemove(null, members[1]);
-      await handleGuildMemberAdd(null, members[1], members[0].user);
-
-      // Re-join originally invited by member 1, now by member 9
-      await handleGuildMemberRemove(null, members[5]);
-      await handleGuildMemberAdd(null, members[5], members[9].user);
-
-      // Invited by member 5
-      await handleGuildMemberAdd(null, members[31], members[5].user);
-      await handleGuildMemberRemove(null, members[31]);
-
-      // Invited by member 6
-      await handleGuildMemberRemove(null, members[18]);
-      await handleGuildMemberAdd(null, members[18], members[5].user);
-    }
-
+    // Compute rankings
     const stage = stages.find(element => element.id === stageId);
-    await computeRankings(members, stage, guildId);
+    await computeRankings(allMembers, stage, guildId);
 
-
+    // Verify rankings
     let result = await db.getStageRankings(stageId, guildId);
     // logObject('Rankings:', result);
     // fs.writeFileSync(`${__dirname}/data/rankings.json`, JSON.stringify(result, null, 2));
@@ -137,7 +87,7 @@ describe('compute rankings', () => {
   });
 
   test('leaderboard', async () => {
-    const leaderboard = await getLeaderboard(stages.find(stage => stage.id === stageId), members[0].user.id, guildId);
+    const leaderboard = await getLeaderboard(stages.find(stage => stage.id === stageId), allMembers[0].user.id, guildId);
     assert.notEqual(leaderboard, null);
   });
 
@@ -178,4 +128,109 @@ function verifyMemberRank(rank, position, points, level) {
   assert.equal(rank.points, points);
   assert.equal(rank.level, level);
   assert.equal(rank.position, position);
+}
+
+async function processEvents() {
+  await addMember(1, 0);
+  await addMember(2, 0);
+  await addMember(3, 0);
+
+  await addMember(4, 1);
+  await addMember(5, 1);
+  await addMember(6, 1);
+
+  await addMember(7, 2);
+  await addMember(8, 2);
+  await addMember(9, 2);
+
+  await addMember(10, 3);
+  await addMember(11, 3);
+  await addMember(12, 3);
+
+  await addMember(13, 4);
+  await addMember(14, 4);
+
+  await addMember(15, 5);
+  await addMember(16, 5);
+
+  await addMember(17, 6);
+  await addMember(18, 6);
+
+  await addMember(19, 7);
+  await addMember(21, 7);
+
+  await addMember(22, 8);
+  await addMember(23, 8);
+
+  await addMember(24, 9);
+  await addMember(25, 9);
+
+  await addMember(26, 10);
+  await addMember(27, 10);
+
+  await addMember(28, 11);
+  await addMember(29, 11);
+
+  await addMember(30, 12);
+
+  // Re-join invited by member 0
+  await removeMember(1);
+  await addMember(1, 0);
+
+  // Re-join originally invited by member 1, now by member 9
+  await removeMember(5);
+  await addMember(5, 9);
+
+  // Invited by member 5
+  await addMember(31, 5);
+  await removeMember(31);
+
+  // Invited by member 6
+  await removeMember(18);
+  await addMember(18, 5);
+}
+
+async function addMember(memberIndex, inviterIndex) {
+  const member = allMembers[memberIndex];
+  const inviter = allMembers[inviterIndex];
+  memberMap[memberIndex] = member;
+  members.splice(0, members.length);
+  members.concat(Object.values(memberMap));
+  await handleGuildMemberAdd(client, getJoinEvent(member.user.id, inviter.user.id));
+}
+
+async function removeMember(memberIndex) {
+  const member = allMembers[memberIndex];
+  console.log(`Removing ${memberIndex}:`, member);
+  delete memberMap[memberIndex];
+  members.splice(0, members.length);
+  members.concat(Object.values(memberMap));
+  await handleGuildMemberRemove(client, getLeaveEvent(member.user.id));
+}
+
+function getJoinEvent(userId, inviterId) {
+  return {
+    type: 'join',
+    guildId: guildId,
+    user: {
+      id: userId,
+    },
+    createdAt: 100,
+    inviter: {
+      id: inviterId,
+    },
+    fake: false,
+    timestamp: Date.now(),
+  };
+}
+
+function getLeaveEvent(userId) {
+  return {
+    type: 'leave',
+    guildId: guildId,
+    user: {
+      id: userId,
+    },
+    timestamp: Date.now(),
+  };
 }

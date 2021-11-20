@@ -5,7 +5,7 @@ import { MongoClient } from 'mongodb';
 import * as fs from 'fs';
 import { strict as assert } from 'assert';
 import { endStageTimer, getStageEndTime, startStageTimer, switchStage } from '../src/stage';
-import { pause } from './test-util';
+import { pause } from '../src/util';
 
 const stageId = 'Newborn Butterflies: Stage 1';
 const nextStageId = 'Newborn Butterflies: Stage 2';

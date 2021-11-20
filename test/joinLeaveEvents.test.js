@@ -3,17 +3,20 @@ import handleGuildMemberAdd from '../src/events/guildMemberAdd';
 import handleGuildMemberRemove from '../src/events/guildMemberRemove';
 import { strict as assert } from 'assert';
 import { MongoClient } from 'mongodb';
-import fs from 'fs';
-import { generateMembers, loadDataFile } from './test-util';
+import { generateMembers, getMockClient, getMockGuild, loadDataFile } from './test-util';
 import * as db from '../src/db';
+import { logObject } from '../src/util';
 
 const stage = 'Newborn Butterflies: Stage 1';
 const guildId = '1';
-const members = generateMembers(3, guildId);
+const allMembers = generateMembers(3, guildId);
 const stages = loadDataFile('data/stages.json');
+const events = loadDataFile('data/events-join-leave.json');
 
-// Fake account
-members[2].user.createdAt = Date.now();
+const members = [ allMembers[0] ];
+
+const guild = getMockGuild(guildId, members);
+const client = getMockClient(guild);
 
 describe('join and leave events', () => {
   let connection;
@@ -34,135 +37,142 @@ describe('join and leave events', () => {
   });
 
   test('regular joins and leaves', async () => {
-    const member = members[0];
-    const inviter = members[1].user;
 
     // Add member
-    await handleGuildMemberAdd(null, member, inviter);
+    const joinEvent = events[0];
+    members.push(allMembers[1]);
+    await handleGuildMemberAdd(client, joinEvent);
 
     const database = await db.getDatabase();
-    let data = await database.collection('members').findOne({ id:member.user.id, guildId });
+    let data = await database.collection('members').findOne({ id: joinEvent.user.id, guildId });
     assert.notEqual(data, null);
     assert.equal(data.fake, false);
     assert.notEqual(data.inviteTimestamp, undefined);
     assert.notEqual(data.inviter, undefined);
-    assert.equal(data.inviter.id, inviter.id);
+    assert.equal(data.inviter.id, joinEvent.inviter.id);
     assert.notEqual(data.originalInviteTimestamp, undefined);
     assert.notEqual(data.originalInviter, undefined);
-    assert.equal(data.originalInviter.id, inviter.id);
+    assert.equal(data.originalInviter.id, joinEvent.inviter.id);
     assert.notEqual(data.user, undefined);
-    assert.equal(data.user.id, member.user.id);
+    assert.equal(data.user.id, joinEvent.user.id);
     assert.equal(data.removeTimestamp, undefined);
     assert.equal(data.removed, undefined);
 
-    await verifyCounters(inviter.id, 1, 1, undefined, undefined, undefined, 1);
-    await verifyJoinEvent(member.user.id, inviter.id, false, 1);
+    await verifyCounters(joinEvent.inviter.id, 1, 1, undefined, undefined, undefined, 1);
+    await verifyJoinEvent(joinEvent.timestamp, 1);
 
     // Remove member
-    await handleGuildMemberRemove(null, member);
+    const leaveEvent = events[1];
+    members.splice(1, 1);
+    await handleGuildMemberRemove(client, leaveEvent);
 
-    data = await database.collection('members').findOne({ id: member.user.id, guildId });
-    assert.notEqual(data, null);
-    assert.notEqual(data.removeTimestamp, undefined);
-    assert.equal(data.removed, true);
+    data = await database.collection('members').findOne({ id: leaveEvent.user.id, guildId });
+    logObject('Members:', data);
+    expect(data).toBeTruthy();
+    expect(data.removeTimestamp).toBeTruthy();
+    expect(data.removed).toBeTruthy();
 
-    await verifyCounters(inviter.id, 0, 1, 1, undefined, undefined, 0);
-    await verifyLeaveEvent(member.user.id, inviter.id);
+    await verifyCounters(joinEvent.inviter.id, 0, 1, 1, undefined, undefined, 0);
+    await verifyLeaveEvent(leaveEvent.timestamp);
   });
 
   test('fake joins and leaves', async () => {
-    const fakeMember = members[2];
-    const inviter = members[1].user;
-
     // Add fake member
-    await handleGuildMemberAdd(null, fakeMember, inviter);
+    const joinEvent = events[2];
+    members.push(allMembers[2]);
+    await handleGuildMemberAdd(client, joinEvent);
 
     const database = await db.getDatabase();
-    let data = await database.collection('members').findOne({ id: fakeMember.user.id, guildId });
+    let data = await database.collection('members').findOne({ id: joinEvent.user.id, guildId });
     assert.notEqual(data, null);
-    assert.equal(data.id, fakeMember.user.id);
-    assert.equal(data.guildId, fakeMember.guild.id);
+    assert.equal(data.id, joinEvent.user.id);
+    assert.equal(data.guildId, joinEvent.guildId);
     assert.equal(data.fake, true);
     assert.notEqual(data.inviteTimestamp, undefined);
     assert.notEqual(data.inviter, undefined);
-    assert.equal(data.inviter.id, inviter.id);
+    assert.equal(data.inviter.id, joinEvent.inviter.id);
     assert.notEqual(data.originalInviteTimestamp, undefined);
     assert.notEqual(data.originalInviter, undefined);
-    assert.equal(data.originalInviter.id, inviter.id);
+    assert.equal(data.originalInviter.id, joinEvent.inviter.id);
     assert.notEqual(data.user, undefined);
-    assert.equal(data.user.id, fakeMember.user.id);
+    assert.equal(data.user.id, joinEvent.user.id);
     assert.equal(data.removeTimestamp, undefined);
     assert.equal(data.removed, undefined);
 
-    await verifyCounters(inviter.id, undefined, undefined, undefined, 1, undefined, undefined);
-    await verifyJoinEvent(fakeMember.user.id, inviter.id, true, null);
+    await verifyCounters(joinEvent.inviter.id, undefined, undefined, undefined, 1, undefined, undefined);
+    await verifyJoinEvent(joinEvent.timestamp, null);
 
     // Remove fake member
-    await handleGuildMemberRemove(null, fakeMember);
+    const leaveEvent = events[3];
+    members.splice(1, 1);
+    await handleGuildMemberRemove(client, leaveEvent);
 
-    data = await database.collection('members').findOne({ id: fakeMember.user.id, guildId });
-    assert.notEqual(data, null);
-    assert.notEqual(data.removeTimestamp, undefined);
-    assert.equal(data.removed, true);
+    data = await database.collection('members').findOne({ id: joinEvent.user.id, guildId });
+    expect(data).toBeTruthy();
+    expect(data.removeTimestamp).toBeTruthy();
+    expect(data.removed).toBeTruthy();
 
-    await verifyCounters(inviter.id, undefined, undefined, undefined, 1, 1, undefined);
-    await verifyLeaveEvent(fakeMember.user.id, inviter.id);
+    await verifyCounters(joinEvent.inviter.id, undefined, undefined, undefined, 1, 1, undefined);
+    await verifyLeaveEvent(leaveEvent.timestamp);
   });
 
   test('re-joins and leaves', async () => {
-    const member = members[0];
-    const inviter = members[1].user;
-
     // Add member and remove
-    await handleGuildMemberAdd(null, member, inviter);
-    await handleGuildMemberRemove(null, member);
+    members.push(allMembers[1]);
+    await handleGuildMemberAdd(client, events[0]);
+    members.splice(1, 1);
+    await handleGuildMemberRemove(client, events[1]);
 
     // Re-join
-    await handleGuildMemberAdd(null, member, inviter);
+    const joinEvent = events[4];
+    members.push(allMembers[1]);
+    await handleGuildMemberAdd(client, joinEvent);
 
     const database = await db.getDatabase();
-    let data = await database.collection('members').findOne({ id: member.user.id, guildId });
+    let data = await database.collection('members').findOne({ id: joinEvent.user.id, guildId });
     assert.equal(data.fake, false);
     assert.notEqual(data.inviteTimestamp, undefined);
     assert.notEqual(data.inviter, undefined);
-    assert.equal(data.inviter.id, inviter.id);
+    assert.equal(data.inviter.id, joinEvent.inviter.id);
     assert.notEqual(data.originalInviteTimestamp, undefined);
     assert.notEqual(data.originalInviter, undefined);
-    assert.equal(data.originalInviter.id, inviter.id);
+    assert.equal(data.originalInviter.id, joinEvent.inviter.id);
     assert.notEqual(data.user, undefined);
-    assert.equal(data.user.id, member.user.id);
+    assert.equal(data.user.id, joinEvent.user.id);
     assert.notEqual(data.removeTimestamp, undefined);
     assert.equal(data.removed, false);
 
     const prevRemoveTimestamp = data.removeTimestamp;
 
-    await verifyCounters(inviter.id, 1, 2, 1, undefined, undefined, 1);
-    await verifyJoinEvent(member.user.id, inviter.id, false, 1);
+    await verifyCounters(joinEvent.inviter.id, 1, 2, 1, undefined, undefined, 1);
+    await verifyJoinEvent(joinEvent.timestamp, 1);
 
-    data = await database.collection('memberCounters').findOne({ id: member.user.id, guildId });
+    data = await database.collection('memberCounters').findOne({ id: joinEvent.user.id, guildId });
     assert.notEqual(data, null);
     assert.equal(data.global.rejoins, 1);
 
     // Remove member
-    await handleGuildMemberRemove(null, member);
+    const leaveEvent = events[5];
+    members.splice(1, 1);
+    await handleGuildMemberRemove(client, leaveEvent);
 
-    data = await database.collection('members').findOne({ id: member.user.id, guildId });
+    data = await database.collection('members').findOne({ id: joinEvent.user.id, guildId });
     assert.notEqual(data, null);
     assert.notEqual(data.removeTimestamp, prevRemoveTimestamp);
     assert.equal(data.removed, true);
 
-    await verifyCounters(inviter.id, 0, 2, 2, undefined, undefined, 0);
-    await verifyLeaveEvent(member.user.id, inviter.id);
+    await verifyCounters(joinEvent.inviter.id, 0, 2, 2, undefined, undefined, 0);
+    await verifyLeaveEvent(leaveEvent.timestamp);
   });
 
   test('no inviter joins and leaves', async () => {
-    const member = members[0];
-
     // Add member without inviter
-    await handleGuildMemberAdd(null, member, undefined);
+    const joinEvent = events[6];
+    members.push(allMembers[0]);
+    await handleGuildMemberAdd(client, joinEvent);
 
     const database = await db.getDatabase();
-    let data = await database.collection('members').findOne({ id: member.user.id, guildId });
+    let data = await database.collection('members').findOne({ id: joinEvent.user.id, guildId });
     assert.notEqual(data, null);
     assert.equal(data.fake, false);
     assert.notEqual(data.inviteTimestamp, undefined);
@@ -170,59 +180,62 @@ describe('join and leave events', () => {
     assert.notEqual(data.originalInviteTimestamp, undefined);
     assert.equal(data.originalInviter, null);
     assert.notEqual(data.user, undefined);
-    assert.equal(data.user.id, member.user.id);
+    assert.equal(data.user.id, joinEvent.user.id);
     assert.equal(data.removeTimestamp, undefined);
     assert.equal(data.removed, undefined);
 
     data = await database.collection('memberCounters').findOne({ id: 2, guildId });
     assert.equal(data, null);
 
-    await verifyJoinEvent(member.user.id, undefined, false, undefined);
+    await verifyJoinEvent(joinEvent.timestamp, null);
 
     // Remove member without inviter
-    await handleGuildMemberRemove(null, member);
+    const leaveEvent = events[7];
+    members.splice(1, 1);
+    await handleGuildMemberRemove(client, leaveEvent);
 
     data = await database.collection('memberCounters').findOne({ id: 2, guildId });
     assert.equal(data, null);
-
-    await verifyLeaveEvent(member.user.id, undefined);
   });
 
   test('joined before test start', async () => {
-    const member = members[0];
-    const inviter = members[0].user;
-
     // Add member
-    await handleGuildMemberAdd(null, member, inviter);
+    let joinEvent = events[0];
+    members.push(allMembers[0]);
+    await handleGuildMemberAdd(client, joinEvent);
 
     // Simulate member's originalInviteTimestamp before stage start
     const database = await db.getDatabase();
-    await database.collection('members').findOneAndUpdate({ id: member.user.id, guildId }, { $set: { originalInviteTimestamp: 0 } });
+    await database.collection('members').findOneAndUpdate({ id: joinEvent.user.id, guildId }, { $set: { originalInviteTimestamp: 0 } });
 
-    await verifyJoinEvent(member.user.id, inviter.id, false, 1);
+    await verifyJoinEvent(joinEvent.timestamp, 1);
 
     // Remove member who joined before stage start
-    await handleGuildMemberRemove(null, member);
+    let leaveEvent = events[1];
+    members.splice(1, 1);
+    await handleGuildMemberRemove(client, leaveEvent);
 
-    const data = await database.collection('members').findOne({ id: member.user.id, guildId });
+    const data = await database.collection('members').findOne({ id: joinEvent.user.id, guildId });
     assert.notEqual(data, null);
     assert.notEqual(data.removeTimestamp, undefined);
     assert.equal(data.removed, true);
 
-    await verifyCounters(inviter.id, 0, 1, 1, undefined, undefined, 1);
-    await verifyLeaveEvent(member.user.id, undefined);
+    await verifyCounters(joinEvent.inviter.id, 0, 1, 1, undefined, undefined, 1);
 
     // Re-join during stage
-    await handleGuildMemberAdd(null, member, inviter);
+    joinEvent = events[4];
+    members.push(allMembers[0]);
+    await handleGuildMemberAdd(client, joinEvent);
 
-    await verifyCounters(inviter.id, 1, 2, 1, undefined, undefined, 1);
-    await verifyJoinEvent(member.user.id, inviter.id, false, 1);
+    await verifyCounters(joinEvent.inviter.id, 1, 2, 1, undefined, undefined, 1);
+    await verifyJoinEvent(joinEvent.timestamp, 1);
 
     // Leave again
-    await handleGuildMemberRemove(null, member);
+    leaveEvent = events[5];
+    members.splice(1, 1);
+    await handleGuildMemberRemove(client, leaveEvent);
 
-    await verifyCounters(inviter.id, 0, 2, 2, undefined, undefined, 1);
-    await verifyLeaveEvent(member.user.id, undefined);
+    await verifyCounters(joinEvent.inviter.id, 0, 2, 2, undefined, undefined, 1);
   });
 });
 
@@ -238,16 +251,17 @@ async function verifyCounters(id, totalInvites, regularInvites, regularLeaves, f
   assert.equal(data[stage].points, stagePoints);
 }
 
-async function verifyJoinEvent(userId, inviterId, fake, stagePoints) {
+async function verifyJoinEvent(timestamp, stagePoints) {
   const database = await db.getDatabase();
-  const data = await database.collection('events').findOne({ guildId: guildId, type: 'join', 'user.id': userId, 'inviter.id': inviterId }, { sort: { timestamp: -1 }, limit: 1 });
-  assert.notEqual(data, null);
-  assert.equal(data.fake, fake);
-  assert.equal(data.stagePoints, stagePoints);
+  const data = await database.collection('events').findOne({ timestamp });
+  expect(data).toBeTruthy();
+  expect(data.processed).toBeTruthy();
+  expect(data.stagePoints).toBe(stagePoints);
 }
 
-async function verifyLeaveEvent(userId, inviterId) {
+async function verifyLeaveEvent(timestamp) {
   const database = await db.getDatabase();
-  const data = await database.collection('events').findOne({ guildId: guildId, type: 'leave', 'user.id': userId, 'inviter.id': inviterId }, { sort: { timestamp: -1 }, limit: 1 });
-  assert.notEqual(data, undefined);
+  const data = await database.collection('events').findOne({ timestamp });
+  expect(data).toBeTruthy();
+  expect(data.processed).toBeTruthy();
 }

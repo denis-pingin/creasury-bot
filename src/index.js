@@ -4,6 +4,7 @@ import { sendLogMessage } from './util';
 import * as db from './db';
 import { deployCommands } from './deploy-commands';
 import * as discord from './discord';
+import { startWatchingEvents, stopWatchingEvents } from './events/joinLeave';
 
 console.log(`Creasury Bot is starting for guild: ${config.guildId}`);
 
@@ -17,8 +18,11 @@ discord.addEventHandlers(client);
 
 discord.login(client, config.token);
 
+startWatchingEvents(client);
+
 async function exitHandler(options, exitCode) {
   await sendLogMessage(client, 'Creasury Bot is going to rest now.');
+  stopWatchingEvents();
   if (exitCode || exitCode === 0) {
     console.log(`Exit code: ${exitCode}`);
   }

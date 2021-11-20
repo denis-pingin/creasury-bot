@@ -5,19 +5,19 @@ import { config } from '../config';
 import * as guild from '../guild';
 import { computeRankings } from '../ranking';
 
-export default async function handleGuildMemberRemove(client, member) {
+export default async function handleGuildMemberRemove(client, event) {
   // Get guild config
-  const guildConfig = await db.getConfig(member.guild.id);
+  const guildConfig = await db.getConfig(event.guildId);
 
   // Remove member
-  const removeMemberResult = await db.removeMember(member);
+  const removeMemberResult = await db.removeMember(event.user, event.guildId);
 
   // Handle global points
   await handleGlobalPoints(client, removeMemberResult);
 
 
   // Build the first part of the message
-  let message = `${getUserTag(member.user)} has left the Creasury community. :pensive:\n`;
+  let message = `${getUserTag(event.user)} has left the Creasury community. :pensive:\n`;
   message = `${message}They were originally invited by ${getInviterTag(removeMemberResult.member.originalInviter)}.\n`;
 
   // Check if there is an active stage
@@ -26,17 +26,18 @@ export default async function handleGuildMemberRemove(client, member) {
     const stageMessage = await handleStagePoints(client, stage, removeMemberResult);
 
     // Get members for ranking
-    const members = await guild.getMembers(member.guild, guildConfig);
+    const members = await guild.getMembers(client.guilds.cache.get(event.guildId), guildConfig);
     // logObject('Members for ranking:', members);
 
     // Compute rankings
-    await computeRankings(members, stage, member.guild.id);
+    await computeRankings(members, stage, event.guildId);
 
     // Append stage message
     message = `${message}\n${stageMessage}`;
   } else {
     await sendLogMessage(client, 'No active stage found, won\'t update stage points.');
   }
+  await db.updateLeaveEvent(event);
 
   await sendInviteMessage(client, message);
 }

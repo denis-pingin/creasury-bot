@@ -1,7 +1,7 @@
 import { config } from './config';
 
 import { MongoClient, ReturnDocument } from 'mongodb';
-import { getUserTag } from './util';
+import { getUserTag, pause } from './util';
 
 const cache = {};
 
@@ -29,6 +29,7 @@ export function init() {
     db.createIndex('events', { 'originalInviter.id': 1 }, { name: 'originalInviterId' });
     db.createIndex('events', { 'timestamp': 1 }, { name: 'timestamp' });
     db.createIndex('events', { 'stagePoints': 1 }, { name: 'stagePoints' });
+    db.createIndex('events', { 'processed': 1 }, { name: 'processed' });
     db.createIndex('stages', { 'id': 1, 'guildId': 1 }, { unique: true, name: 'compositePrimaryKey' });
     db.createIndex('stages', { 'active': 1 }, { name: 'active' });
     db.createIndex('stages', { 'order': 1 }, { name: 'order' });
@@ -54,7 +55,7 @@ export function setConnection(connection) {
   cache.connection = connection;
 }
 
-async function getConnection() {
+export async function getConnection() {
   if (!cache.connection) {
     console.log('Creating MongoDB connection');
     const client = new MongoClient(config.dbConnectionString);
@@ -63,9 +64,33 @@ async function getConnection() {
   return cache.connection;
 }
 
-async function getDatabase() {
+export async function getDatabase() {
   const connection = await getConnection();
   return connection.db(config.dbName);
+}
+
+
+async function getUnprocessedEvent(database) {
+  return await database.collection('events').findOne({ processed: false }, { sort: { timestamp: 1 } });
+}
+
+export async function startWatchingEvents(callback) {
+  cache.running = true;
+  const database = await getDatabase();
+  while (cache.running) {
+    let event = await getUnprocessedEvent(database);
+    while (!event && cache.running) {
+      await pause(1000);
+      event = await getUnprocessedEvent(database);
+    }
+    if (event) {
+      await callback(event);
+    }
+  }
+}
+
+export function stopWatchingEvents() {
+  cache.running = false;
 }
 
 export async function getConfig(guildId) {
@@ -100,28 +125,47 @@ export async function getStagePoints(userId, guildId) {
   }
 }
 
-export async function addJoinEvent(member, inviter, originalInviter, fake) {
+export async function updateJoinEvent(event, stagePoints, originalInviter) {
   const database = await getDatabase();
-  const timestamp = Date.now();
-  await database.collection('events').insertOne({
+
+  const updatedEvent = {
+    ...event,
+    originalInviter,
+    stagePoints,
+    processed: true,
+  };
+  delete updatedEvent._id;
+
+  await database.collection('events').updateOne({
     type: 'join',
-    guildId: member.guild.id,
-    user: member.user,
-    createdAt: member.user.createdAt,
-    inviter: inviter,
-    originalInviter: originalInviter,
-    fake: fake,
-    timestamp: timestamp,
+    'user.id': event.user.id,
+    timestamp: event.timestamp,
+    guildId: event.guildId,
+  }, {
+    $set: updatedEvent,
+  }, {
+    upsert: true,
   });
-  return timestamp;
 }
 
-export async function updateJoinEvent(userId, timestamp, stagePoints) {
+export async function updateLeaveEvent(event) {
   const database = await getDatabase();
-  await database.collection('events').updateOne({ 'user.id': userId, timestamp: timestamp }, {
-    $set: {
-      stagePoints: stagePoints,
-    },
+
+  const updatedEvent = {
+    ...event,
+    processed: true,
+  };
+  delete updatedEvent._id;
+
+  await database.collection('events').updateOne({
+    type: 'leave',
+    'user.id': event.user.id,
+    timestamp: event.timestamp,
+    guildId: event.guildId,
+  }, {
+    $set: updatedEvent,
+  }, {
+    upsert: true,
   });
 }
 
@@ -145,16 +189,16 @@ export async function initMembers(members) {
   }
 }
 
-async function addMember(member, inviter, fake) {
+export async function addMember(user, inviter, fake, guildId) {
   const database = await getDatabase();
   const membersCollection = database.collection('members');
 
-  const rejoin = await membersCollection.findOne({ id: member.user.id, guildId: member.guild.id });
+  const rejoin = await membersCollection.findOne({ id: user.id, guildId: guildId });
   let newMember;
   if (rejoin) {
-    newMember = await membersCollection.findOneAndUpdate({ id: member.user.id, guildId: member.guild.id }, {
+    newMember = await membersCollection.findOneAndUpdate({ id: user.id, guildId: guildId }, {
       $set: {
-        user: member.user,
+        user: user,
         inviter: inviter,
         inviteTimestamp: Date.now(),
         fake: fake,
@@ -164,14 +208,14 @@ async function addMember(member, inviter, fake) {
       upsert: true,
       returnDocument: ReturnDocument.AFTER,
     });
-    console.log(`A rejoined member ${getUserTag(member.user)} has originally joined on ${rejoin.originalInviteTimestamp} and were invited by ${getUserTag(rejoin.originalInviter)}`);
+    console.log(`A rejoined member ${getUserTag(user)} has originally joined on ${rejoin.originalInviteTimestamp} and were invited by ${getUserTag(rejoin.originalInviter)}`);
   } else {
     const timestamp = Date.now();
-    newMember = await membersCollection.findOneAndUpdate({ id: member.user.id, guildId: member.guild.id }, {
+    newMember = await membersCollection.findOneAndUpdate({ id: user.id, guildId: guildId }, {
       $set: {
-        id: member.user.id,
-        guildId: member.guild.id,
-        user: member.user,
+        id: user.id,
+        guildId: guildId,
+        user: user,
         originalInviter: inviter,
         originalInviteTimestamp: timestamp,
         inviter: inviter,
@@ -182,29 +226,22 @@ async function addMember(member, inviter, fake) {
       upsert: true,
       returnDocument: ReturnDocument.AFTER,
     });
-    console.log(`A new member was added: ${getUserTag(member.user)}`);
+    console.log(`A new member was added: ${getUserTag(user)}`);
   }
   return { member: newMember.value, rejoin: !!rejoin };
 }
 
-async function removeMember(member) {
+export async function removeMember(user, guildId) {
   const database = await getDatabase();
 
-  await database.collection('events').insertOne({
-    type: 'leave',
-    guildId: member.guild.id,
-    user: member.user,
-    timestamp: Date.now(),
-  });
-
   const result = await database.collection('members').findOneAndUpdate({
-    id: member.user.id,
-    guildId: member.guild.id,
+    id: user.id,
+    guildId: guildId,
   }, {
     $set: {
-      id: member.user.id,
-      guildId: member.guild.id,
-      user: member.user,
+      id: user.id,
+      guildId: guildId,
+      user: user,
       removed: true,
       removeTimestamp: Date.now(),
     },
@@ -212,11 +249,11 @@ async function removeMember(member) {
     upsert: true,
     returnDocument: ReturnDocument.AFTER,
   });
-  console.log(`Member ${getUserTag(member.user)} was marked as removed.`);
+  console.log(`Member ${getUserTag(user)} was marked as removed.`);
   return { member: result.value };
 }
 
-async function updateCounter(counter, user, guildId, increment) {
+export async function updateCounter(counter, user, guildId, increment) {
   const database = await getDatabase();
 
   const result = await database.collection('memberCounters').findOneAndUpdate({ id: user.id, guildId: guildId }, {
@@ -311,7 +348,7 @@ export async function getStageByOrder(order, guildId) {
   return await database.collection('stages').findOne({ order, guildId });
 }
 
-async function getActiveStage(guildId) {
+export async function getActiveStage(guildId) {
   const database = await getDatabase();
   return await database.collection('stages').findOne({ active: true, guildId });
 }
@@ -411,11 +448,16 @@ export async function getMemberRewards(userId, guildId) {
   return await database.collection('rewards').findOne({ id: userId, guildId: guildId });
 }
 
-export {
-  getConnection,
-  getDatabase,
-  addMember,
-  removeMember,
-  updateCounter,
-  getActiveStage,
-};
+export async function addMetric(type, value) {
+  const database = await getDatabase();
+  return await database.collection('metrics').insertOne({
+    type,
+    value,
+    timestamp: Date.now(),
+  });
+}
+
+export async function getMetrics() {
+  const database = await getDatabase();
+  return await database.collection('metrics').find({}, { sort: { timestamp: -1 } }).toArray();
+}
