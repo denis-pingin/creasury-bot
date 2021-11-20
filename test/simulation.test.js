@@ -14,7 +14,7 @@ const stages = loadDataFile('data/stages.json');
 const guildConfig = loadDataFile('data/config.json');
 config.guildId = guildId;
 config.dbName = 'simulation';
-const invites = [];
+const invites = { };
 const members = [];
 const goal = 250;
 const getInvites = jest.fn();
@@ -103,13 +103,13 @@ allMembers.forEach(member => {
 describe('simulation', () => {
   let connection;
 
-  beforeAll(async () => {
-    connection = await MongoClient.connect(global.__MONGO_URI__, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    db.setConnection(connection);
-  });
+  // beforeAll(async () => {
+  //   connection = await MongoClient.connect(global.__MONGO_URI__, {
+  //     useNewUrlParser: true,
+  //     useUnifiedTopology: true,
+  //   });
+  //   db.setConnection(connection);
+  // });
 
   beforeEach(async () => {
     await db.clearData();
@@ -117,6 +117,10 @@ describe('simulation', () => {
     await database.collection('stages').insertMany(stages);
     await database.collection('config').insertOne(guildConfig);
   });
+
+  // afterAll(async () => {
+  //
+  // });
 
   test('stage 1', async () => {
     // Init
@@ -131,16 +135,21 @@ describe('simulation', () => {
 
     // Create the first invite
     let invite = createInvite(guild, members[0], 0);
-    invites.push(invite);
+    invites[members[0].user.id] = invite;
     await handlers.inviteCreate.call(this, invite);
+
+    const startTime = Date.now();
+    const stepDurations = [];
 
     // Simulation until the member goal has been reached
     while (members.length < goal) {
+      const stepStartTime = Date.now();
+
       // Random inviter
       const inviterIndex = Math.floor(Math.random() * members.length);
 
       // Increment invite uses
-      invites[inviterIndex].uses += 1;
+      invites[members[inviterIndex].user.id].uses += 1;
 
       // Add new member
       const joinCandidates = allMembers.filter(m1 => members.indexOf(m2 => m2.user.id === m1.user.id) < 0);
@@ -149,9 +158,9 @@ describe('simulation', () => {
       await handlers.guildMemberAdd.call(this, member);
 
       // Create invite if not already created
-      if (invites.findIndex(i => i.inviter.id === member.user.id) < 0) {
+      if (!invites[member.user.id]) {
         invite = createInvite(guild, member, 0);
-        invites.push(invite);
+        invites[member.user.id] = invite;
         await handlers.inviteCreate.call(this, invite);
       }
 
@@ -162,10 +171,21 @@ describe('simulation', () => {
         members.splice(leaverIndex, 1);
         await handlers.guildMemberRemove.call(this, leaver);
       }
+
+      const stepEndTime = Date.now();
+      stepDurations.push(stepEndTime - stepStartTime);
     }
 
-    const rankings = await db.getStageRankings(stages[0].id, guildId);
+    const endTime = Date.now();
+    console.log('Simulation duration:', endTime - startTime);
+    console.log('Min step duration:', stepDurations.reduce((prev, cur) => cur < prev ? cur : prev, Number.MAX_VALUE));
+    console.log('Max step duration:', stepDurations.reduce((prev, cur) => cur > prev ? cur : prev, Number.MIN_VALUE));
+    console.log('Average step duration:', stepDurations.reduce((prev, cur) => cur + prev, 0) / stepDurations.length);
+
     const timestamp = Date.now();
+    fs.writeFileSync(`${__dirname}/simulation/durations-${timestamp}.json`, util.inspect(stepDurations, { showHidden: false, depth: null, colors: false, maxArrayLength: 1000 }));
+
+    const rankings = await db.getStageRankings(stages[0].id, guildId);
     fs.writeFileSync(`${__dirname}/simulation/rankings-${timestamp}.json`, util.inspect(rankings, { showHidden: false, depth: null, colors: false, maxArrayLength: 1000 }));
 
     const activeStage = await db.getActiveStage(guildId);
@@ -195,20 +215,19 @@ function createInvite(guild, member, uses) {
 function getInvitesMock() {
   return {
     each: (callback) => {
-      invites.forEach(i => {
+      Object.values(invites).forEach(i => {
         callback.call(this, i);
       });
     },
     find: (callback) => {
-      for (let i = 0; i < invites.length; i++) {
-        const inv = invites[i];
+      for (const inv of Object.values(invites)) {
         if (callback.call(this, inv)) {
           return inv;
         }
       }
     },
     values: () => {
-      return invites;
+      return Object.values(invites);
     },
   };
 }

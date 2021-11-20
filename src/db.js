@@ -34,6 +34,7 @@ export function init() {
     db.createIndex('stages', { 'ended': 1 }, { name: 'ended' });
     db.createIndex('config', { 'guildId': 1 }, { name: 'guildId' });
     db.createIndex('rewards', { 'id': 1, 'guildId': 1 }, { unique: true, name: 'compositePrimaryKey' });
+    db.createIndex('stageRankings', { 'stageId': 1, 'guildId': 1 }, { unique: true, name: 'compositePrimaryKey' });
   });
 }
 
