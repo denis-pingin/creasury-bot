@@ -77,7 +77,7 @@ function buildJoinMessage(user, addMemberResult) {
   } else {
     // First time join
     message = `${getUserTag(user)} has joined the Creasury community! :tada::tada::tada:\n`;
-    message = `${message}They were invited by ${getInviterTag(addMemberResult.member.originalInviter)}, who is a hero! :trophy:\n`;
+    message = `${message}They were invited by ${getInviterTag(addMemberResult.member.originalInviter)}${addMemberResult.member.originalInviter ? ', who is a hero! :trophy:' : ''}\n`;
   }
   return message;
 }
