@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "babel": "babel ./src -d build --source-maps true",
+    "lint": "eslint src --fix",
     "start": "babel-node ./src/index.js",
     "test": "jest --runInBand",
     "simulation": "jest test/simulation.test.js --testPathIgnorePatterns"

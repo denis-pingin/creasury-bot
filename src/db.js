@@ -28,6 +28,7 @@ export function init() {
     db.createIndex('events', { 'inviter.id': 1 }, { name: 'inviterId' });
     db.createIndex('events', { 'originalInviter.id': 1 }, { name: 'originalInviterId' });
     db.createIndex('events', { 'timestamp': 1 }, { name: 'timestamp' });
+    db.createIndex('events', { 'stagePoints': 1 }, { name: 'stagePoints' });
     db.createIndex('stages', { 'id': 1, 'guildId': 1 }, { unique: true, name: 'compositePrimaryKey' });
     db.createIndex('stages', { 'active': 1 }, { name: 'active' });
     db.createIndex('stages', { 'order': 1 }, { name: 'order' });
@@ -215,7 +216,7 @@ async function removeMember(member) {
   return { member: result.value };
 }
 
-async function updateCounter(name, user, guildId, increment) {
+async function updateCounter(counter, user, guildId, increment) {
   const database = await getDatabase();
 
   const result = await database.collection('memberCounters').findOneAndUpdate({ id: user.id, guildId: guildId }, {
@@ -224,21 +225,53 @@ async function updateCounter(name, user, guildId, increment) {
       guildId: guildId,
       lastUpdated: Date.now(),
     },
-    $inc: { [name]: increment },
+    $inc: { [counter]: increment },
   }, {
     upsert: true,
     returnDocument: ReturnDocument.AFTER,
   });
-  return getObjectFieldValue(name, result.value);
+  return getObjectFieldValue(counter, result.value);
 }
 
-export async function getLastTimeReachedThisScore(id, points) {
+export async function getCounters(counter, userIds, stageId, guildId) {
   const database = await getDatabase();
-  const result = await database.collection('events').findOne({
-    'originalInviter.id': id,
-    stagePoints: points,
-  }, { sort: { timestamp: -1 } });
-  return result?.timestamp | 0;
+  const counters = await database.collection('memberCounters')
+    .find({ id: { $in: userIds }, guildId }, { projection: { id: true, [counter]: true } }).toArray();
+
+  // Create counters map for lookup
+  const countersMap = counters.reduce((prev, cur) => {
+    prev[cur.id] = cur ? cur[stageId] ? cur[stageId].points | 0 : 0 : 0;
+    return prev;
+  }, {});
+
+  // Map user IDs to points
+  return userIds.map(userId => {
+    return {
+      id: userId,
+      points: countersMap[userId] ? countersMap[userId] : 0,
+    };
+  });
+}
+
+export async function getLastTimeReachedThisScore(userIds, points, guildId) {
+  const database = await getDatabase();
+  const result = await database.collection('events')
+    .find({
+      type: 'join',
+      'originalInviter.id': { $in: userIds },
+      stagePoints: points,
+      guildId: guildId,
+    }, {
+      projection: {
+        'originalInviter.id': true,
+        timestamp: true,
+      },
+      sort: { timestamp: 1 },
+    }).toArray();
+  return result.reduce((prev, cur) => {
+    prev[cur.originalInviter.id] = cur.timestamp | 0;
+    return prev;
+  }, {});
 }
 
 export async function updateStageRankings(stage, rankings, guildId) {

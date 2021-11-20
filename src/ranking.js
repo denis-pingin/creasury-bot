@@ -179,17 +179,8 @@ export async function computeRankings(members, stage, guildId) {
   console.log('Starting to compute rankings...');
   const startTime = Date.now();
 
-  const database = await db.getDatabase();
-
-  let memberPoints = await Promise.all(members
-    .map(async member => {
-      const result = await database.collection('memberCounters').findOne({ id: member.user.id, guildId: guildId }, { projection: { [`${stage.id}.points`]: true } });
-      const points = result ? result[stage.id] ? result[stage.id].points | 0 : 0 : 0;
-      return {
-        id: member.user.id,
-        points: points,
-      };
-    }));
+  const userIds = members.map(m => m.user.id);
+  let memberPoints = await db.getCounters(`${stage.id}.points`, userIds, stage.id, guildId);
   memberPoints = memberPoints.sort((a, b) => a.points > b.points ? -1 : 1);
   // logObject('Member points:', memberPoints);
 
@@ -199,7 +190,7 @@ export async function computeRankings(members, stage, guildId) {
   const l2CutoffIndex = Math.floor(l2Candidates.length / 3);
   // logObject('Level 2 cutoff index:', l2CutoffIndex);
 
-  memberPoints = await sortMembers(memberPoints);
+  memberPoints = await sortMembers(memberPoints, guildId);
   // logObject('Sorted members:', memberPoints);
 
   const rankings = [];
@@ -220,30 +211,62 @@ export async function computeRankings(members, stage, guildId) {
   console.log(`Finished computing rankings in ${endTime - startTime} ms.`);
 }
 
-async function sortMembers(memberPoints) {
+async function sortMembers(memberPoints, guildId) {
   // Fetch timestamps for members with equal points
+  const ties = [];
   for (let i = 0; i < memberPoints.length; i++) {
     const cur = memberPoints[i];
+
+    // If not the last one
     if (i < memberPoints.length - 1) {
+      // Take the next one
       const next = memberPoints[i + 1];
+      // It's a tie if the next one has the same amount of points
       if (cur.points === next.points) {
-        cur.timestamp = await db.getLastTimeReachedThisScore(cur.id, cur.points);
+        ties.push(cur);
       } else if (i > 0) {
-        // If next has less but prev has the same, fetch for cur
+        // If not the first one
+        // If the next has less but prev has the same
         const prev = memberPoints[i - 1];
         if (cur.points === prev.points) {
-          cur.timestamp = await db.getLastTimeReachedThisScore(cur.id, cur.points);
+          ties.push(cur);
         }
       }
     } else if (i > 0) {
-      // If last one has the same as prev, fetch for cur
+      // If the last one has the same as prev
       const prev = memberPoints[i - 1];
       if (cur.points === prev.points) {
-        cur.timestamp = await db.getLastTimeReachedThisScore(cur.id, cur.points);
+        ties.push(cur);
       }
     }
   }
-  // logObject('Fetched timestamps', memberPoints);
+
+  // Group ties by the amount of points
+  const groupedTies = ties.reduce((prev, cur) => {
+    if (!prev[cur.points]) {
+      prev[cur.points] = [];
+    }
+    prev[cur.points].push(cur.id);
+    return prev;
+  }, {});
+
+  // For each tie group determine the last time when given amount of points was reached per user
+  let timestamps = {};
+  for (const points of Object.keys(groupedTies)) {
+    const groupTimestamps = await db.getLastTimeReachedThisScore(groupedTies[points], parseInt(points), guildId);
+    timestamps = {
+      ...timestamps,
+      ...groupTimestamps,
+    };
+  }
+
+  // Augment member points with timestamps
+  memberPoints = memberPoints.map(m => {
+    return {
+      ...m,
+      timestamp: timestamps[m.id] ? timestamps[m.id] : 0,
+    };
+  });
 
   // Sort members based on points and timestamps
   return memberPoints.sort((a, b) => {

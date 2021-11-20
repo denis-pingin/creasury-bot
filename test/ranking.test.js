@@ -111,6 +111,7 @@ describe('compute rankings', () => {
 
 
     let result = await db.getStageRankings(stageId, guildId);
+    // logObject('Rankings:', result);
     // fs.writeFileSync(`${__dirname}/data/rankings.json`, JSON.stringify(result, null, 2));
     assert.notEqual(result, null);
     result = result.rankings.reduce((prev, cur) => {

@@ -101,8 +101,8 @@ allMembers.forEach(member => {
 });
 
 describe('simulation', () => {
-  let connection;
-
+  // let connection;
+  //
   // beforeAll(async () => {
   //   connection = await MongoClient.connect(global.__MONGO_URI__, {
   //     useNewUrlParser: true,
@@ -174,6 +174,7 @@ describe('simulation', () => {
 
       const stepEndTime = Date.now();
       stepDurations.push(stepEndTime - stepStartTime);
+      fs.writeFileSync(`${__dirname}/simulation/durations-${startTime}.json`, util.inspect(stepDurations, { showHidden: false, depth: null, colors: false, maxArrayLength: 1000 }));
     }
 
     const endTime = Date.now();
@@ -182,11 +183,8 @@ describe('simulation', () => {
     console.log('Max step duration:', stepDurations.reduce((prev, cur) => cur > prev ? cur : prev, Number.MIN_VALUE));
     console.log('Average step duration:', stepDurations.reduce((prev, cur) => cur + prev, 0) / stepDurations.length);
 
-    const timestamp = Date.now();
-    fs.writeFileSync(`${__dirname}/simulation/durations-${timestamp}.json`, util.inspect(stepDurations, { showHidden: false, depth: null, colors: false, maxArrayLength: 1000 }));
-
     const rankings = await db.getStageRankings(stages[0].id, guildId);
-    fs.writeFileSync(`${__dirname}/simulation/rankings-${timestamp}.json`, util.inspect(rankings, { showHidden: false, depth: null, colors: false, maxArrayLength: 1000 }));
+    fs.writeFileSync(`${__dirname}/simulation/rankings-${startTime}.json`, util.inspect(rankings, { showHidden: false, depth: null, colors: false, maxArrayLength: 1000 }));
 
     const activeStage = await db.getActiveStage(guildId);
     expect(activeStage).toBeTruthy();
@@ -196,7 +194,7 @@ describe('simulation', () => {
     }
 
     const leaderboard = await getLeaderboard(stages[0], members[0].user, guildId);
-    fs.writeFileSync(`${__dirname}/simulation/leaderboard-${timestamp}.json`, util.inspect(leaderboard, { showHidden: false, depth: null, colors: false, maxArrayLength: 1000 }));
+    fs.writeFileSync(`${__dirname}/simulation/leaderboard-${startTime}.json`, util.inspect(leaderboard, { showHidden: false, depth: null, colors: false, maxArrayLength: 1000 }));
   });
 });
 
