@@ -6,7 +6,8 @@
   "scripts": {
     "babel": "babel ./src -d build --source-maps true",
     "start": "babel-node ./src/index.js",
-    "test": "jest --runInBand --forceExit"
+    "test": "jest --runInBand",
+    "simulation": "jest test/simulation.test.js --testPathIgnorePatterns"
   },
   "author": "Creasury Monarch",
   "license": "ISC",
