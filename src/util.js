@@ -50,13 +50,32 @@ export function getUserTag(user) {
 }
 
 export function getRewardTag(stage, level) {
-  const addition = `${ stage.number === 1 ? 'I' : stage.number === 2 ? 'II' : '' }`;
+  let addition;
+  switch (stage.number) {
+    case 1:
+      addition = 'I ';
+      break;
+    case 2:
+      addition = 'II ';
+      break;
+    case 3:
+      addition = 'III ';
+      break;
+    case 4:
+      addition = 'IV ';
+      break;
+    case 5:
+      addition = 'V ';
+      break;
+    default:
+      addition = '';
+  }
   switch (level) {
-    case 1: return `${stage.rewardName} Rookie ${addition}`;
-    case 2: return `${stage.rewardName} Master ${addition}`;
-    case 3: return markdownEscape(`${stage.rewardName} Champion * ${addition}`);
-    case 4: return markdownEscape(`${stage.rewardName} Champion ** ${addition}`);
-    case 5: return markdownEscape(`${stage.rewardName} Champion *** ${addition}`);
+    case 1: return `${stage.rewardName} ${addition}Rookie`;
+    case 2: return `${stage.rewardName} ${addition}Master`;
+    case 3: return `${stage.rewardName} ${addition}Champion 3`;
+    case 4: return `${stage.rewardName} ${addition}Champion 2`;
+    case 5: return `${stage.rewardName} ${addition}Champion 1`;
   }
 }
 
