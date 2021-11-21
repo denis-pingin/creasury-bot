@@ -13,7 +13,7 @@ import * as discord from '../src/discord';
 import { config } from '../src/config';
 import util from 'util';
 import * as fs from 'fs';
-import { getLeaderboard } from '../src/ranking';
+import { getScoreboard } from '../src/ranking';
 import { startWatchingEvents } from '../src/events/joinLeave';
 import { pause } from '../src/util';
 
@@ -144,8 +144,8 @@ describe('simulation', () => {
       expect(activeStage.endTime).toBeTruthy();
     }
 
-    const leaderboard = await getLeaderboard(stages[0], members[0].user, guildId);
-    fs.writeFileSync(`${__dirname}/simulation/leaderboard-${startTime}.json`, util.inspect(leaderboard, { showHidden: false, depth: null, colors: false, maxArrayLength: 1000 }));
+    const scoreboard = await getScoreboard(stages[0], members[0].user, guildId);
+    fs.writeFileSync(`${__dirname}/simulation/scoreboard-${startTime}.json`, util.inspect(scoreboard, { showHidden: false, depth: null, colors: false, maxArrayLength: 1000 }));
   });
 });
 

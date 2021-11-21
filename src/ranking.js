@@ -20,8 +20,8 @@ export async function getRankings(stageId, guildId) {
   }
 }
 
-export async function getLeaderboard(stage, user, guildId) {
-  console.log(`Retrieving leaderboard for stage "${stage.id}", user ${getUserTag(user)} and guild ${guildId}`);
+export async function getScoreboard(stage, user, guildId) {
+  console.log(`Retrieving scoreboard for stage "${stage.id}", user ${getUserTag(user)} and guild ${guildId}`);
   const rankings = await getRankings(stage.id, guildId);
   if (rankings) {
     const levels = {};
@@ -67,7 +67,7 @@ export async function getLeaderboard(stage, user, guildId) {
     // logObject('Levels:', levels);
 
 
-    let leaderboard = [];
+    let scoreboard = [];
     const includedIndexes = {};
     for (let i = 0; i < rankingTable.length; i++) {
       if (includedIndexes[i]) {
@@ -75,25 +75,25 @@ export async function getLeaderboard(stage, user, guildId) {
       }
 
       if (rankingTable[i].id === user.id) {
-        leaderboard.push({ type: 'spacer' });
+        scoreboard.push({ type: 'spacer' });
 
         if (!includedIndexes[i - 1] && i > 1) {
           // Add previous to me
-          leaderboard.push({ ...rankingTable[i - 1], type: 'member', me: rankingTable[i - 1].id === user.id });
+          scoreboard.push({ ...rankingTable[i - 1], type: 'member', me: rankingTable[i - 1].id === user.id });
           includedIndexes[i - 1] = true;
         }
 
         // Add me
-        leaderboard.push({ ...rankingTable[i], type: 'member', me: rankingTable[i].id === user.id });
+        scoreboard.push({ ...rankingTable[i], type: 'member', me: rankingTable[i].id === user.id });
         includedIndexes[i] = true;
 
         if (!includedIndexes[i + 1] && i < rankingTable.length - 1) {
           // Add next to me
-          leaderboard.push({ ...rankingTable[i + 1], type: 'member', me: rankingTable[i + 1].id === user.id });
+          scoreboard.push({ ...rankingTable[i + 1], type: 'member', me: rankingTable[i + 1].id === user.id });
           includedIndexes[i + 1] = true;
         }
 
-        leaderboard.push({ type: 'spacer' });
+        scoreboard.push({ type: 'spacer' });
       }
 
       for (let level = 5; level > 0; level--) {
@@ -101,27 +101,27 @@ export async function getLeaderboard(stage, user, guildId) {
 
         let added = false;
         if (levelData.cutoffIndex === i) {
-          leaderboard.push({ type: 'spacer' });
+          scoreboard.push({ type: 'spacer' });
 
           if (!includedIndexes[i]) {
             // Add level cutoff
-            leaderboard.push({ ...rankingTable[i], type: 'member', me: rankingTable[i].id === user.id });
+            scoreboard.push({ ...rankingTable[i], type: 'member', me: rankingTable[i].id === user.id });
             includedIndexes[i] = true;
             added = true;
           }
 
-          leaderboard.push({ type: 'spacer' });
+          scoreboard.push({ type: 'spacer' });
 
           if (i < rankingTable.length - 1) {
             if (!includedIndexes[i + 1]) {
-              leaderboard.push({ type: 'spacer' });
+              scoreboard.push({ type: 'spacer' });
 
               // Add next to level cutoff (top of the lower level)
-              leaderboard.push({ ...rankingTable[i + 1], type: 'member', me: rankingTable[i + 1].id === user.id });
+              scoreboard.push({ ...rankingTable[i + 1], type: 'member', me: rankingTable[i + 1].id === user.id });
               includedIndexes[i + 1] = true;
               added = true;
 
-              leaderboard.push({ type: 'spacer' });
+              scoreboard.push({ type: 'spacer' });
             }
           }
         }
@@ -130,21 +130,21 @@ export async function getLeaderboard(stage, user, guildId) {
         }
       }
     }
-    // logObject('Leaderboard:', leaderboard);
+    // logObject('Scoreboard:', scoreboard);
 
-    for (let i = 0; i < leaderboard.length; i++) {
-      const entry = leaderboard[i];
+    for (let i = 0; i < scoreboard.length; i++) {
+      const entry = scoreboard[i];
       if (entry.type === 'spacer') {
         // Delete spacer duplicates
-        if (i > 0 && leaderboard[i - 1].type === 'spacer') {
-          leaderboard[i - 1].delete = true;
+        if (i > 0 && scoreboard[i - 1].type === 'spacer') {
+          scoreboard[i - 1].delete = true;
         }
         continue;
       }
 
       // Go up and find the next non-spacer
       for (let j = i - 1; j > 0; j--) {
-        const prevEntry = leaderboard[j];
+        const prevEntry = scoreboard[j];
         if (prevEntry.type === 'spacer') {
           continue;
         }
@@ -153,14 +153,14 @@ export async function getLeaderboard(stage, user, guildId) {
         if (entry.position - prevEntry.position === 1) {
           // Delete all spacer in between
           for (let k = j + 1; k < i; k++) {
-            leaderboard[k].delete = true;
+            scoreboard[k].delete = true;
           }
         }
       }
     }
-    // logObject('Marked leaderboard:', leaderboard);
+    // logObject('Marked scoreboard:', scoreboard);
 
-    leaderboard = leaderboard.filter((entry, index) => {
+    scoreboard = scoreboard.filter((entry, index) => {
       if (entry.delete ||
         (entry.type === 'spacer' && index === 0) ||
         (entry.type === 'spacer' && entry.position === rankingTable.length - 1)) {
@@ -168,8 +168,8 @@ export async function getLeaderboard(stage, user, guildId) {
       }
       return true;
     });
-    // logObject('Leaderboard:', leaderboard);
-    return leaderboard;
+    // logObject('Scoreboard:', scoreboard);
+    return scoreboard;
   } else {
     console.log(`Rankings for the stage ${stage.id} and guild ${guildId} not found`);
   }

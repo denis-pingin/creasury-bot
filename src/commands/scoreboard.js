@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import * as db from '../db';
-import { getLeaderboard } from '../ranking';
+import { getScoreboard } from '../ranking';
 import { getRewardTag, getUserTag } from '../util';
 
 const STAGE_CURRENT = 'current';
@@ -8,8 +8,8 @@ const STAGE_PREVIOUS = 'previous';
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('leaderboard')
-    .setDescription('Prints the stage leaderboard.')
+    .setName('scoreboard')
+    .setDescription('Prints stage levels and ranking.')
     .addStringOption(option =>
       option.setName('stage')
         .setDescription('Stage selector')
@@ -22,7 +22,7 @@ module.exports = {
     if (options && options.value) {
       stageOption = options.value;
     }
-    console.log(`Get leaderboard for user ${interaction.user.id} and stage ${stageOption}`);
+    console.log(`Get scoreboard for user ${interaction.user.id} and stage ${stageOption}`);
 
     let stage;
     let message = '';
@@ -41,13 +41,13 @@ module.exports = {
     }
 
     if (stage) {
-      console.log(`Leaderboard for the stage "${stage.id}" with levels:`, stage.levels);
+      console.log(`Scoreboard for the stage "${stage.id}" with levels:`, stage.levels);
 
-      const leaderboard = await getLeaderboard(stage, interaction.user, interaction.guildId);
-      if (leaderboard) {
-        message = printLeaderboard(stage, leaderboard);
+      const scoreboard = await getScoreboard(stage, interaction.user, interaction.guildId);
+      if (scoreboard) {
+        message = printScoreboard(stage, scoreboard);
       } else {
-        message = `Leaderboard for the stage **${stage.id}** does not exist yet.`;
+        message = `Scoreboard for the stage **${stage.id}** does not exist yet.`;
       }
     }
 
@@ -60,9 +60,9 @@ module.exports = {
   },
 };
 
-function printLeaderboard(stage, leaderboard) {
-  let message = `-------------------- Current leaderboard for the stage **${stage.id}** --------------------\n`;
-  leaderboard.forEach(entry => {
+function printScoreboard(stage, scoreboard) {
+  let message = `-------------------- Current scoreboard for the stage **${stage.id}** --------------------\n`;
+  scoreboard.forEach(entry => {
     if (entry.type === 'spacer') {
       message = `${message}...\n`;
     } else {

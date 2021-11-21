@@ -2,7 +2,7 @@ import 'regenerator-runtime/runtime';
 import { generateMembers, getMockClient, getMockGuild, loadDataFile } from './test-util';
 import { MongoClient } from 'mongodb';
 import * as db from '../src/db';
-import { computeRankings, getLeaderboard, getMemberRanking, getNextLevelPoints } from '../src/ranking';
+import { computeRankings, getScoreboard, getMemberRanking, getNextLevelPoints } from '../src/ranking';
 import handleGuildMemberAdd from '../src/events/guildMemberAdd';
 import * as assert from 'assert';
 import handleGuildMemberRemove from '../src/events/guildMemberRemove';
@@ -86,9 +86,9 @@ describe('compute rankings', () => {
     }
   });
 
-  test('leaderboard', async () => {
-    const leaderboard = await getLeaderboard(stages.find(stage => stage.id === stageId), allMembers[0].user.id, guildId);
-    assert.notEqual(leaderboard, null);
+  test('scoreboard', async () => {
+    const scoreboard = await getScoreboard(stages.find(stage => stage.id === stageId), allMembers[0].user.id, guildId);
+    assert.notEqual(scoreboard, null);
   });
 
   test('next level points with no level', async () => {
