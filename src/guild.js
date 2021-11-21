@@ -1,4 +1,4 @@
-import * as db from '../src/db';
+import * as db from './db';
 
 const reloadTime = 10 * 1000;
 const guildConfigMap = {};
