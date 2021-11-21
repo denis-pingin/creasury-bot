@@ -2,6 +2,7 @@ import { SlashCommandBuilder } from '@discordjs/builders';
 import * as db from '../db';
 import { getScoreboard } from '../ranking';
 import { getRewardTag, getUserTag } from '../util';
+import * as guild from '../guild';
 
 const STAGE_CURRENT = 'current';
 const STAGE_PREVIOUS = 'previous';
@@ -17,6 +18,15 @@ module.exports = {
         .addChoice(STAGE_CURRENT, STAGE_CURRENT)
         .addChoice(STAGE_PREVIOUS, STAGE_PREVIOUS)),
   async execute(interaction) {
+    // Get guild config
+    const guildConfig = await guild.getGuildConfig(interaction.guildId);
+    if (guildConfig && guildConfig.scoreboardAllowedChannelIds &&
+      guildConfig.scoreboardAllowedChannelIds.length > 0 &&
+      !guildConfig.scoreboardAllowedChannelIds.includes(interaction.channelId)) {
+      await interaction.reply(`This command can only be used in ${guildConfig.scoreboardAllowedChannelIds.length === 1 ? 'channel' : 'channels'} ${guildConfig.scoreboardAllowedChannelIds.map(id => `<#${id}> `)}`);
+      return;
+    }
+
     const options = interaction.options.get('stage');
     let stageOption = STAGE_CURRENT;
     if (options && options.value) {

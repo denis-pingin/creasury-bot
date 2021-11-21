@@ -2,8 +2,8 @@ import { SlashCommandBuilder } from '@discordjs/builders';
 import * as db from '../db';
 import { getRankings } from '../ranking';
 import { getUserTag, logObject, markdownEscape, sendLogMessage } from '../util';
-import { config } from '../config';
 import { distributeLevelRewards } from '../distribution';
+import * as guild from '../guild';
 
 export const data = new SlashCommandBuilder()
   .setName('distribute')
@@ -14,7 +14,14 @@ export const data = new SlashCommandBuilder()
       .setRequired(true));
 
 export async function execute(interaction) {
-  const admin = interaction.member.roles.cache.some(role => role.id === config.adminRoleId);
+  // Get guild config
+  const guildConfig = await guild.getGuildConfig(interaction.guild.id);
+  if (!guildConfig || !guildConfig.adminRoleId) {
+    await interaction.reply('Admin role ID is not configured.');
+    return;
+  }
+
+  const admin = interaction.member.roles.cache.some(role => role.id === guildConfig.adminRoleId);
   if (!admin) {
     await interaction.reply('This command requires admin.');
     return;
@@ -26,7 +33,7 @@ export async function execute(interaction) {
     return;
   }
 
-  sendLogMessage(interaction.client, `Initiating distribution for level ${level}`);
+  await sendLogMessage(interaction.client, interaction.guild.id, `Initiating distribution for level ${level}`);
 
   const stage = await db.getPreviousStage(interaction.guildId);
   if (!stage) {

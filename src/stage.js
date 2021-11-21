@@ -23,10 +23,10 @@ export async function checkStageGoal(client, stage, members) {
   if (!stage.endTime && memberGoal) {
     // Member goal reached
     if (members.length >= memberGoal) {
-      await sendLogMessage(client, `The stage goal of ${memberGoal} members has been reached!`);
+      await sendLogMessage(client, stage.guildId, `The stage goal of ${memberGoal} members has been reached!`);
 
       const stageEndTime = await startStageTimer(client, stage, stage.guildId, 10000);
-      await sendLogMessage(client, `Stage will end at ${stageEndTime}.`);
+      await sendLogMessage(client, stage.guildId, `Stage will end at ${stageEndTime}.`);
 
       message = `Congratulations, the stage goal of ${stage.goals.memberCount} members has been reached! :dart:\n\n`;
       message = `${message}Great job, @everyone! :fire::fire::fire:\n\n`;
@@ -72,7 +72,7 @@ function startTimer(client, guildId, stageEndTime, stage, timeout) {
       if (nextStage) {
         message = `${message}Not less important than that, a new stage **${nextStage.id}** has started, with the goal to reach **${nextStage.goals?.memberCount}** members. Good luck!\n`;
       }
-      await sendInviteMessage(client, message);
+      await sendInviteMessage(client, guildId, message);
 
       delete timers[guildId];
     } else {

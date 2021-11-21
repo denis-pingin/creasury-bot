@@ -2,5 +2,15 @@
   "guildId": "896118395530002462",
   "excludedFromRanking": [
     "389509254811222029"
+  ],
+  "inviteChannelId": "896118395978784800",
+  "logChannelId": "909143642852175893",
+  "minAccountAge": 1,
+  "adminRoleId": "896121498119589928",
+  "rankAllowedChannelIds": [
+    "911993377233461299"
+  ],
+  "scoreboardAllowedChannelIds": [
+    "911993377233461299"
   ]
 }

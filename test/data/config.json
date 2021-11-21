@@ -2,5 +2,15 @@
   "guildId": "1",
   "excludedFromRanking": [
     "12"
+  ],
+  "inviteChannelId": "2",
+  "logChannelId": "3",
+  "minAccountAge": 1,
+  "adminRoleId": "4",
+  "rankAllowedChannelIds": [
+    "5"
+  ],
+  "scoreboardAllowedChannelIds": [
+    "6"
   ]
 }

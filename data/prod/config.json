@@ -3,5 +3,15 @@
   "excludedFromRanking": [
     "389509254811222029",
     "900423813634859009"
+  ],
+  "inviteChannelId": "909070153130582087",
+  "logChannelId": "909150544243867750",
+  "minAccountAge": 1,
+  "adminRoleId": "900431815419002902",
+  "rankAllowedChannelIds": [
+    "911994209953792051"
+  ],
+  "scoreboardAllowedChannelIds": [
+    "911994209953792051"
   ]
 }

@@ -2,18 +2,19 @@ import * as db from '../db';
 import { checkStageGoal, startStageTimer } from '../stage';
 import { getMembers } from '../guild';
 import { logObject, sendInviteMessage } from '../util';
+import * as guild from '../guild';
 
 export async function handleInit(client, guildId) {
   console.log(`Handle init for guild ${guildId}`);
-  const guild = client.guilds.cache.get(guildId);
+  const discordGuild = client.guilds.cache.get(guildId);
   // logObject('Guild:', guild);
 
   // Get guild config
-  const guildConfig = await db.getConfig(guildId);
+  const guildConfig = await guild.getGuildConfig(guildId);
   logObject('Guild config:', guildConfig);
 
   // Init members
-  const members = await getMembers(guild, guildConfig);
+  const members = await getMembers(discordGuild, guildConfig);
   // logObject('Members:', members);
   await db.initMembers(members);
 
@@ -28,7 +29,7 @@ export async function handleInit(client, guildId) {
     }
     const message = await checkStageGoal(client, stage, members);
     if (message) {
-      await sendInviteMessage(client, message);
+      await sendInviteMessage(client, guildId, message);
     }
   } else {
     console.log('No active stage.');

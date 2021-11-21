@@ -21,7 +21,7 @@ discord.login(client, config.token);
 startWatchingEvents(client);
 
 async function exitHandler(options, exitCode) {
-  await sendLogMessage(client, 'Creasury Bot is going to rest now.');
+  await sendLogMessage(client, config.guildId, 'Creasury Bot is going to rest now.');
   stopWatchingEvents();
   if (exitCode || exitCode === 0) {
     console.log(`Exit code: ${exitCode}`);

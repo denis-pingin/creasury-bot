@@ -1,29 +1,41 @@
-import { config } from './config';
 import * as util from 'util';
+import * as guild from './guild';
 
-export async function sendInviteMessage(client, message) {
+export async function sendInviteMessage(client, guildId, message) {
   console.log(`#invites: ${message}`);
 
   if (!client) return;
 
-  const channel = client.channels.cache.get(config.inviteChannelId);
-  if (!channel) {
-    console.log('Warning: invite channel not found');
+  const guildConfig = await guild.getGuildConfig(guildId);
+
+  if (guildConfig.inviteChannelId) {
+    const channel = client.channels.cache.get(guildConfig.inviteChannelId);
+    if (channel) {
+      await channel.send(message);
+    } else {
+      console.warn(`Invite channel with ID ${guildConfig.inviteChannelId} not found!`);
+    }
   } else {
-    await channel.send(message);
+    console.warn('Invite channel ID not configured');
   }
 }
 
-export async function sendLogMessage(client, message) {
+export async function sendLogMessage(client, guildId, message) {
   console.log(`#log: ${message}`);
 
   if (!client) return;
 
-  const channel = client.channels.cache.get(config.logChannelId);
-  if (!channel) {
-    console.log('Warning: log channel not found');
+  const guildConfig = await guild.getGuildConfig(guildId);
+
+  if (guildConfig.logChannelId) {
+    const channel = client.channels.cache.get(guildConfig.logChannelId);
+    if (channel) {
+      await channel.send(message);
+    } else {
+      console.warn(`Log channel with ID ${guildConfig.logChannelId} not found!`);
+    }
   } else {
-    await channel.send(message);
+    console.warn('Log channel ID not configured');
   }
 }
 

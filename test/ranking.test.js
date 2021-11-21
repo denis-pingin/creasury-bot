@@ -48,7 +48,7 @@ describe('compute rankings', () => {
     verifyMemberRank(rank, 1, 3, 5);
   });
 
-  test.only('compute rank', async () => {
+  test('compute rank', async () => {
 
     // Generate data
     await processEvents();

@@ -22,7 +22,7 @@ export function createClient() {
 export function addEventHandlers(client) {
   client.once('ready', async () => {
     try {
-      await sendLogMessage(client, 'Creasury Bot ready for action!');
+      await sendLogMessage(client, config.guildId, 'Creasury Bot ready for action!');
 
       // inviteTracker.init(client);
 

@@ -27,7 +27,7 @@ config.dbName = 'simulation';
 
 const members = [];
 
-const goal = 2500;
+const goal = 250;
 
 const guild = getMockGuild(guildId, members);
 

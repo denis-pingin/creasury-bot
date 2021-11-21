@@ -93,7 +93,7 @@ export function stopWatchingEvents() {
   cache.running = false;
 }
 
-export async function getConfig(guildId) {
+export async function getGuildConfig(guildId) {
   const database = await getDatabase();
   const result = await database.collection('config').findOneAndUpdate({ guildId }, {
     $set: {

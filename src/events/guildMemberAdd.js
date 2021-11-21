@@ -8,7 +8,8 @@ import * as guild from '../guild';
 
 export default async function handleGuildMemberAdd(client, event) {
   // Get guild config
-  const guildConfig = await db.getConfig(event.guildId);
+  const guildConfig = await guild.getGuildConfig(event.guildId);
+  // logObject('Guild config:', guildConfig);
 
   // Add member
   const addMemberResult = await db.addMember(event.user, event.inviter, event.fake, event.guildId);
@@ -39,7 +40,7 @@ export default async function handleGuildMemberAdd(client, event) {
       stagePoints = await db.getStagePoints(addMemberResult.member.originalInviter.id, event.guildId);
     }
   } else {
-    await sendLogMessage(client, 'No active stage found, won\'t award stage points.');
+    await sendLogMessage(client, event.guildId, 'No active stage found, won\'t award stage points.');
   }
 
   // Update join event
@@ -61,7 +62,7 @@ export default async function handleGuildMemberAdd(client, event) {
   }
 
   // Send invite message
-  await sendInviteMessage(client, message);
+  await sendInviteMessage(client, event.guildId, message);
 }
 
 function buildJoinMessage(user, addMemberResult) {
