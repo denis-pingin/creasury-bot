@@ -3,11 +3,14 @@
     "guildId": "900431655876063233",
     "id": "891933721727479840",
     "global": {
-      "regularInvites": 95,
+      "regularInvites": 96,
       "regularLeaves": 45,
       "fakeInvites": 12,
       "fakeLeaves": 1,
-      "totalInvites": 50
+      "totalInvites": 51
+    },
+    "Newborn Butterflies: Stage 1": {
+      "points": 51
     }
   },
   {
@@ -19,6 +22,9 @@
       "fakeInvites": 0,
       "fakeLeaves": 0,
       "totalInvites": 5
+    },
+    "Newborn Butterflies: Stage 1": {
+      "points": 5
     }
   },
   {
@@ -30,6 +36,9 @@
       "fakeInvites": 0,
       "fakeLeaves": 0,
       "totalInvites": 1
+    },
+    "Newborn Butterflies: Stage 1": {
+      "points": 1
     }
   },
   {
@@ -41,6 +50,9 @@
       "fakeInvites": 0,
       "fakeLeaves": 0,
       "totalInvites": 1
+    },
+    "Newborn Butterflies: Stage 1": {
+      "points": 1
     }
   },
   {
@@ -52,6 +64,9 @@
       "fakeInvites": 0,
       "fakeLeaves": 0,
       "totalInvites": 1
+    },
+    "Newborn Butterflies: Stage 1": {
+      "points": 1
     }
   }
 ]

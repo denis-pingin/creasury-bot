@@ -13,6 +13,16 @@ export async function handleInit(client, guildId) {
   const guildConfig = await guild.getGuildConfig(guildId);
   logObject('Guild config:', guildConfig);
 
+  // Update command permissions
+  const commands = await discordGuild.commands.fetch();
+  commands.forEach(command => {
+    const registeredCommand = client.commands.get(command.name);
+    if (registeredCommand && registeredCommand.updatePermissions) {
+      console.log(`Updating permissions for command /${command.name}`);
+      registeredCommand.updatePermissions(client, command.id);
+    }
+  });
+
   // Init members
   const members = await getMembers(discordGuild, guildConfig);
   // logObject('Members:', members);

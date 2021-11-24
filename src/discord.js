@@ -3,6 +3,7 @@ import fs from 'fs';
 import { logObject, sendLogMessage } from './util';
 import { handleInit } from './events/init';
 import { config } from './config';
+import * as guild from './guild';
 
 export function createClient() {
   const client = new Client({
@@ -23,8 +24,6 @@ export function addEventHandlers(client) {
   client.once('ready', async () => {
     try {
       await sendLogMessage(client, config.guildId, 'Creasury Bot ready for action!');
-
-      // inviteTracker.init(client);
 
       await handleInit(client, config.guildId);
     } catch (err) {
@@ -50,6 +49,24 @@ export function addEventHandlers(client) {
     }
   });
 }
+
+export async function grantCommandPermissionToAdminRole(client, commandId) {
+  const discordGuild = await client.guilds.cache.get(config.guildId);
+  const command = await discordGuild.commands.cache.get(commandId);
+
+  const guildConfig = await guild.getGuildConfig(config.guildId);
+  if (guildConfig.adminRoleId) {
+    const permissions = [
+      {
+        id: guildConfig.adminRoleId,
+        type: 'ROLE',
+        permission: true,
+      },
+    ];
+    await command.permissions.add({ permissions });
+  }
+}
+
 
 export function login(client, token) {
   client.login(token);

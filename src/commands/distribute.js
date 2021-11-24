@@ -4,14 +4,21 @@ import { getRankings } from '../ranking';
 import { getUserTag, logObject, markdownEscape, sendLogMessage } from '../util';
 import { distributeLevelRewards } from '../distribution';
 import * as guild from '../guild';
+import * as discord from '../discord';
 
 export const data = new SlashCommandBuilder()
   .setName('distribute')
   .setDescription('Initiates reward distribution.')
+  .setDefaultPermission(false)
   .addStringOption(option =>
     option.setName('level')
       .setDescription('Level')
       .setRequired(true));
+
+export async function updatePermissions(client, commandId) {
+  await discord.grantCommandPermissionToAdminRole(client, commandId);
+  console.log('Permission to use /distribute command granted to admin role');
+}
 
 export async function execute(interaction) {
   // Get guild config
