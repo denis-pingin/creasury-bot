@@ -62,16 +62,24 @@ async function handleStagePoints(guildConfig, client, stage, removeMemberResult)
   const originalInviter = removeMemberResult.member.originalInviter;
   const guildId = removeMemberResult.member.guildId;
   if (originalInviter) {
+    const excluded = guild.excludedFromRanking(originalInviter.id, guildConfig);
+
     const originalInviteTimestamp = removeMemberResult.member.originalInviteTimestamp;
     if (removeMemberResult.member.fake) {
       await updateStageCounterAndLog(client, stage.id, 'fakeLeaves', originalInviter, guildId, 1);
-      message = `Minimum account age requirements weren't met (> ${guildConfig.minAccountAge * 24} hours), won't update stage points.`;
+      if (!excluded) {
+        message = `Minimum account age requirements weren't met (> ${guildConfig.minAccountAge * 24} hours), won't update stage points.`;
+      }
     } else if (originalInviteTimestamp < stage.startedAt) {
       await sendLogMessage(client, guildId, `${getUserTag(removeMemberResult.member.user)} originally joined before the current stage has started, won't update stage points.`);
-      message = `${getUserTag(removeMemberResult.member.user)} originally joined before the current stage has started, won't update stage points.`;
+      if (!excluded) {
+        message = `${getUserTag(removeMemberResult.member.user)} originally joined before the current stage has started, won't update stage points.`;
+      }
     } else {
       const points = await updateStageCounterAndLog(client, stage.id, 'points', originalInviter, guildId, -1);
-      message = `${getUserTag(removeMemberResult.member.originalInviter)} just lost 1 point and now has ${points} ${points === 1 ? 'point' : 'points'} in total.`;
+      if (!excluded) {
+        message = `${getUserTag(removeMemberResult.member.originalInviter)} just lost 1 point and now has ${points} ${points === 1 ? 'point' : 'points'} in total.`;
+      }
     }
   } else {
     await sendLogMessage(client, guildId, `Original inviter of member ${getUserTag(removeMemberResult.member.user)} is unknown, won't update stage points.`);
