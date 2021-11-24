@@ -1,0 +1,57 @@
+[
+  {
+    "guildId": "900431655876063233",
+    "id": "891933721727479840",
+    "global": {
+      "regularInvites": 95,
+      "regularLeaves": 45,
+      "fakeInvites": 12,
+      "fakeLeaves": 1,
+      "totalInvites": 50
+    }
+  },
+  {
+    "guildId": "900431655876063233",
+    "id": "827931152718626827",
+    "global": {
+      "regularInvites": 15,
+      "regularLeaves": 10,
+      "fakeInvites": 0,
+      "fakeLeaves": 0,
+      "totalInvites": 5
+    }
+  },
+  {
+    "guildId": "900431655876063233",
+    "id": "543946152928739348",
+    "global": {
+      "regularInvites": 1,
+      "regularLeaves": 0,
+      "fakeInvites": 0,
+      "fakeLeaves": 0,
+      "totalInvites": 1
+    }
+  },
+  {
+    "guildId": "900431655876063233",
+    "id": "899628449705123910",
+    "global": {
+      "regularInvites": 1,
+      "regularLeaves": 0,
+      "fakeInvites": 0,
+      "fakeLeaves": 0,
+      "totalInvites": 1
+    }
+  },
+  {
+    "guildId": "900431655876063233",
+    "id": "909761641938288711",
+    "global": {
+      "regularInvites": 1,
+      "regularLeaves": 0,
+      "fakeInvites": 0,
+      "fakeLeaves": 0,
+      "totalInvites": 1
+    }
+  }
+]

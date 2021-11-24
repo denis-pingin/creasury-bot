@@ -17,19 +17,19 @@
     },
     "levels": {
       "5": {
-        "minPoints": 3
+        "minPoints": 2
       },
       "4": {
-        "minPoints": 3
+        "minPoints": 2
       },
       "3": {
-        "minPoints": 3
+        "minPoints": 2
       },
       "2": {
-        "minPoints": 3
+        "minPoints": 2
       },
       "1": {
-        "minPoints": 2
+        "minPoints": 1
       }
     },
     "goals": {
@@ -40,7 +40,7 @@
         "5": [
           {
             "type": "achievements",
-            "id": "Pioneer Champion *** I",
+            "id": "Pioneer I Champion 1",
             "distribution": "guaranteed"
           },
           {
@@ -57,7 +57,7 @@
         "4": [
           {
             "type": "achievements",
-            "id": "Pioneer Champion ** I",
+            "id": "Pioneer I Champion 2",
             "distribution": "guaranteed"
           },
           {
@@ -74,7 +74,7 @@
         "3": [
           {
             "type": "achievements",
-            "id": "Pioneer Champion * I",
+            "id": "Pioneer I Champion 3",
             "distribution": "guaranteed"
           },
           {
@@ -91,7 +91,7 @@
         "2": [
           {
             "type": "achievements",
-            "id": "Pioneer Master I",
+            "id": "Pioneer I Master",
             "distribution": "guaranteed"
           },
           {
@@ -104,13 +104,13 @@
             "type": "whitelistSpots",
             "id": "Early Presale Whitelist Spot",
             "distribution": "weighted-lottery",
-            "supply": 3
+            "supply": 5
           }
         ],
         "1": [
           {
             "type": "achievements",
-            "id": "Pioneer Rookie I",
+            "id": "Pioneer I Rookie",
             "distribution": "guaranteed"
           },
           {
@@ -145,19 +145,19 @@
     },
     "levels": {
       "5": {
-        "minPoints": 3
+        "minPoints": 2
       },
       "4": {
-        "minPoints": 3
+        "minPoints": 2
       },
       "3": {
-        "minPoints": 3
+        "minPoints": 2
       },
       "2": {
-        "minPoints": 3
+        "minPoints": 2
       },
       "1": {
-        "minPoints": 2
+        "minPoints": 1
       }
     },
     "goals": {
@@ -168,7 +168,7 @@
         "5": [
           {
             "type": "achievements",
-            "id": "Pioneer Champion ** II",
+            "id": "Pioneer II Champion 1",
             "distribution": "guaranteed"
           },
           {
@@ -185,7 +185,7 @@
         "4": [
           {
             "type": "achievements",
-            "id": "Pioneer Champion ** II",
+            "id": "Pioneer II Champion 2",
             "distribution": "guaranteed"
           },
           {
@@ -202,7 +202,7 @@
         "3": [
           {
             "type": "achievements",
-            "id": "Pioneer Champion * II",
+            "id": "Pioneer II Champion 1",
             "distribution": "guaranteed"
           },
           {
@@ -219,7 +219,7 @@
         "2": [
           {
             "type": "achievements",
-            "id": "Pioneer Master II",
+            "id": "Pioneer II Master",
             "distribution": "guaranteed"
           },
           {
@@ -238,7 +238,7 @@
         "1": [
           {
             "type": "achievements",
-            "id": "Pioneer Rookie I",
+            "id": "Pioneer II Rookie",
             "distribution": "guaranteed"
           },
           {
