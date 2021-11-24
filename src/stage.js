@@ -67,7 +67,7 @@ function startTimer(client, guildId, stageEndTime, stage, timeout) {
       const nextStage = await switchStage(stage);
 
       // Send new stage announcement
-      let message = `Big news, @everyone! Stage **${stage.id}** has ended and the results have been frozen.\n`;
+      let message = `Big news, @everyone! Stage **${stage.id}** has ended and the results have been frozen. :checkered_flag::checkered_flag::checkered_flag:\n`;
       message = `${message}To check your final score use the **/rank previous** command.\n\n`;
       if (nextStage) {
         message = `${message}Not less important than that, a new stage **${nextStage.id}** has started, with the goal to reach **${nextStage.goals?.memberCount}** members. Good luck!\n`;
@@ -107,4 +107,12 @@ export async function switchStage(stage) {
   } else {
     console.log(`The next stage with order ${nextStageOrder} couldn't be found.`);
   }
+}
+
+export async function startStage(stageId, guildId) {
+
+  console.log(`Starting stage **${stageId}** in guild ${guildId}`);
+
+  // Start the stage
+  return await db.startStage(stageId, guildId);
 }
