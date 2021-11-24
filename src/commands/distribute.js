@@ -23,7 +23,7 @@ export async function execute(interaction) {
 
   const admin = interaction.member.roles.cache.some(role => role.id === guildConfig.adminRoleId);
   if (!admin) {
-    await interaction.reply('This command requires admin.');
+    await interaction.reply('This command requires an admin role.');
     return;
   }
 

@@ -20,10 +20,15 @@ module.exports = {
   async execute(interaction) {
     // Get guild config
     const guildConfig = await guild.getGuildConfig(interaction.guildId);
-    if (guildConfig && guildConfig.rankAllowedChannelIds &&
+
+    const admin = guildConfig.adminRoleId && interaction.member.roles.cache.some(role => role.id === guildConfig.adminRoleId);
+
+    // Check allowed channel for the rank command
+    if (guildConfig.rankAllowedChannelIds &&
       guildConfig.rankAllowedChannelIds.length > 0 &&
+      !admin &&
       !guildConfig.rankAllowedChannelIds.includes(interaction.channelId)) {
-      await interaction.reply(`This command can only be used in ${guildConfig.rankAllowedChannelIds.length === 1 ? 'channel' : 'channels'} ${guildConfig.rankAllowedChannelIds.map(id => `<#${id}> `)}`);
+      await interaction.reply(`This command can only be used in the ${guildConfig.rankAllowedChannelIds.length === 1 ? 'channel' : 'channels'} ${guildConfig.rankAllowedChannelIds.map(id => `<#${id}> `)}`);
       return;
     }
 
