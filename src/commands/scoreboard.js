@@ -20,7 +20,11 @@ module.exports = {
   async execute(interaction) {
     // Get guild config
     const guildConfig = await guild.getGuildConfig(interaction.guildId);
-    if (guildConfig && guildConfig.scoreboardAllowedChannelIds &&
+
+    const admin = guildConfig.adminRoleId && interaction.member.roles.cache.some(role => role.id === guildConfig.adminRoleId);
+
+    if (!admin &&
+      guildConfig && guildConfig.scoreboardAllowedChannelIds &&
       guildConfig.scoreboardAllowedChannelIds.length > 0 &&
       !guildConfig.scoreboardAllowedChannelIds.includes(interaction.channelId)) {
       await interaction.reply(`This command can only be used in ${guildConfig.scoreboardAllowedChannelIds.length === 1 ? 'channel' : 'channels'} ${guildConfig.scoreboardAllowedChannelIds.map(id => `<#${id}> `)}`);

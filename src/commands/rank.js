@@ -24,9 +24,9 @@ module.exports = {
     const admin = guildConfig.adminRoleId && interaction.member.roles.cache.some(role => role.id === guildConfig.adminRoleId);
 
     // Check allowed channel for the rank command
-    if (guildConfig.rankAllowedChannelIds &&
+    if (!admin &&
+      guildConfig.rankAllowedChannelIds &&
       guildConfig.rankAllowedChannelIds.length > 0 &&
-      !admin &&
       !guildConfig.rankAllowedChannelIds.includes(interaction.channelId)) {
       await interaction.reply(`This command can only be used in the ${guildConfig.rankAllowedChannelIds.length === 1 ? 'channel' : 'channels'} ${guildConfig.rankAllowedChannelIds.map(id => `<#${id}> `)}`);
       return;
