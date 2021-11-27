@@ -184,10 +184,7 @@ export async function computeRankings(members, stage, guildId) {
   memberPoints = memberPoints.sort((a, b) => a.points > b.points ? -1 : 1);
   // logObject('Member points:', memberPoints);
 
-  const l2Candidates = memberPoints.filter(val => val.points >= stage.levels['2'].minPoints);
-  // logObject('Level 2 candidates:', l2Candidates);
-
-  const l2CutoffIndex = Math.floor(l2Candidates.length / 3);
+  const l2CutoffIndex = getL2CutoffIndex(memberPoints, stage);
   // logObject('Level 2 cutoff index:', l2CutoffIndex);
 
   memberPoints = await sortMembers(memberPoints, guildId);
@@ -281,23 +278,34 @@ async function sortMembers(memberPoints, guildId) {
   });
 }
 
-function getLevel(memberPoints, index, levels, cutoffIndex) {
-  if (memberPoints[index].points >= levels['5'].minPoints && index === 0) {
+function getL2CutoffIndex(rankings, stage) {
+  const l2Candidates = rankings.filter(val => val.points >= stage.levels['2'].minPoints);
+  // logObject('Level 2 candidates:', l2Candidates);
+
+  if (l2Candidates.length <= 3) {
+    return -1;
+  } else {
+    return 2 + Math.floor((l2Candidates.length - 3) / 3);
+  }
+}
+
+function getLevel(rankings, index, levels, cutoffIndex) {
+  if (rankings[index].points >= levels['5'].minPoints && index === 0) {
     return 5;
-  } else if (memberPoints[index].points >= levels['4'].minPoints && index === 1) {
+  } else if (rankings[index].points >= levels['4'].minPoints && index === 1) {
     return 4;
-  } else if (memberPoints[index].points >= levels['3'].minPoints && index === 2) {
+  } else if (rankings[index].points >= levels['3'].minPoints && index === 2) {
     return 3;
-  } else if (memberPoints[index].points >= levels['2'].minPoints && index <= cutoffIndex) {
+  } else if (rankings[index].points >= levels['2'].minPoints && index <= cutoffIndex) {
     return 2;
-  } else if (memberPoints[index].points >= levels['1'].minPoints) {
+  } else if (rankings[index].points >= levels['1'].minPoints) {
     return 1;
   }
 }
 
-export function getNextLevelPoints(level, rankings, stage) {
+export function getNextLevelPointsDiff(level, points, rankings, stage) {
   if (level) {
-    // Some level
+    // Some level 1-5
     if (level < 5) {
       // Not the highest level
       const nextLevel = level + 1;
@@ -305,14 +313,21 @@ export function getNextLevelPoints(level, rankings, stage) {
       // logObject('Next level ranking:', nextLevelRanking);
       if (nextLevelRanking.length > 0) {
         // There is a next level candidate
-        return nextLevelRanking[nextLevelRanking.length - 1].points;
+        return nextLevelRanking[nextLevelRanking.length - 1].points - points + 1;
+      } else if (level === 1) {
+        // There is no next level candidate
+        const l2CutoffIndex = getL2CutoffIndex(rankings.rankings, stage);
+        if (l2CutoffIndex >= 0) {
+          return rankings.rankings[l2CutoffIndex].points - points + 1;
+        }
+        return stage.levels[nextLevel].minPoints - points;
       } else {
         // There is no next level candidate
-        return stage.levels[nextLevel].minPoints;
+        return stage.levels[nextLevel].minPoints - points;
       }
     }
   } else {
     // No level
-    return stage.levels[1].minPoints;
+    return stage.levels[1].minPoints - points;
   }
 }

@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import * as db from '../db';
 import { getRewardTag } from '../util';
-import { getNextLevelPoints, getRankings } from '../ranking';
+import { getNextLevelPointsDiff, getRankings } from '../ranking';
 import * as guild from '../guild';
 
 const STAGE_CURRENT = 'current';
@@ -64,7 +64,7 @@ module.exports = {
         const position = rankings.rankings.findIndex((user) => user.id === interaction.user.id);
         if (position >= 0) {
           const rank = rankings.rankings[position];
-          const nextLevelPoints = getNextLevelPoints(rank.level, rankings, stage);
+          const nextLevelPointsDiff = getNextLevelPointsDiff(rank.level, rank.points, rankings, stage);
 
           if (rank.level) {
             // Some level
@@ -75,8 +75,8 @@ module.exports = {
             // No level
             message = `Stage **${stage.id}**: You have **${rank.points}** ${rank.points === 1 ? 'point' : 'points'} and your rank is **${rank.position}**. ${stage.ended ? 'You have no achievements in this stage' : 'You need to work harder to earn a reward'}.\n`;
           }
-          if (!stage.ended && nextLevelPoints) {
-            message = `${message}As of now, you need ${nextLevelPoints} more ${nextLevelPoints === 1 ? 'point' : 'points'} to reach the next level.`;
+          if (!stage.ended && nextLevelPointsDiff) {
+            message = `${message}As of now, you need ${nextLevelPointsDiff} more ${nextLevelPointsDiff === 1 ? 'point' : 'points'} to reach the next level.`;
           }
         } else {
           message = 'Hmmm, cannot find you in the ranking table, this actually shouldn\'t happen. Sorry for that, please contact our support.';

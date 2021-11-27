@@ -2,7 +2,7 @@ import 'regenerator-runtime/runtime';
 import { generateMembers, getMockClient, getMockGuild, loadDataFile } from './test-util';
 import { MongoClient } from 'mongodb';
 import * as db from '../src/db';
-import { computeRankings, getScoreboard, getMemberRanking, getNextLevelPoints } from '../src/ranking';
+import { computeRankings, getScoreboard, getMemberRanking, getNextLevelPointsDiff } from '../src/ranking';
 import handleGuildMemberAdd from '../src/events/guildMemberAdd';
 import * as assert from 'assert';
 import handleGuildMemberRemove from '../src/events/guildMemberRemove';
@@ -73,7 +73,7 @@ describe('compute rankings', () => {
     verifyTableRank(result, 0, 3, 3, 3);
     verifyTableRank(result, 1, 4, 3, 2);
     verifyTableRank(result, 4, 5, 2, 2);
-    verifyTableRank(result, 5, 6, 2, 1);
+    verifyTableRank(result, 5, 6, 2, 2);
     verifyTableRank(result, 7, 7, 2, 1);
     verifyTableRank(result, 8, 8, 2, 1);
     verifyTableRank(result, 9, 9, 2, 1);
@@ -92,27 +92,40 @@ describe('compute rankings', () => {
   });
 
   test('next level points with no level', async () => {
-    expect(getNextLevelPoints(undefined, rankings, stages[0])).toBe(1);
+    expect(getNextLevelPointsDiff(undefined, 0, rankings, stages[0])).toBe(1);
   });
 
   test('next level points with level 1', async () => {
-    expect(getNextLevelPoints(1, rankings, stages[0])).toBe(2);
+    expect(getNextLevelPointsDiff(1, 1, rankings, stages[0])).toBe(2);
+    expect(getNextLevelPointsDiff(1, 2, rankings, stages[0])).toBe(1);
   });
 
   test('next level points with level 2', async () => {
-    expect(getNextLevelPoints(2, rankings, stages[0])).toBe(3);
+    expect(getNextLevelPointsDiff(2, 2, rankings, stages[0])).toBe(2);
+    expect(getNextLevelPointsDiff(2, 3, rankings, stages[0])).toBe(1);
   });
 
   test('next level points with level 3', async () => {
-    expect(getNextLevelPoints(3, rankings, stages[0])).toBe(3);
+    expect(getNextLevelPointsDiff(3, 2, rankings, stages[0])).toBe(2);
+    expect(getNextLevelPointsDiff(3, 3, rankings, stages[0])).toBe(1);
   });
 
   test('next level points with level 4', async () => {
-    expect(getNextLevelPoints(4, rankings, stages[0])).toBe(3);
+    expect(getNextLevelPointsDiff(4, 3, rankings, stages[0])).toBe(1);
   });
 
   test('next level points with level 5', async () => {
-    expect(getNextLevelPoints(5, rankings, stages[0])).toBeFalsy();
+    expect(getNextLevelPointsDiff(5, 5, rankings, stages[0])).toBeFalsy();
+  });
+
+  test('next level points no master', async () => {
+    const rankingsNoMaster = loadDataFile('data/rankings-no-master.json');
+    expect(getNextLevelPointsDiff(1, 7, rankingsNoMaster, stages[0])).toBe(2);
+  });
+
+  test('next level points one master', async () => {
+    const rankingsOneMaster = loadDataFile('data/rankings-one-master.json');
+    expect(getNextLevelPointsDiff(1, 6, rankingsOneMaster, stages[0])).toBe(2);
   });
 });
 
