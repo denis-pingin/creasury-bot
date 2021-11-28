@@ -1,63 +1,72 @@
 {
   "pending": [],
-  "distributed":[
+  "distributed": [
     {
-      "type":"achievements",
-      "id":"Pioneer Master I",
-      "distribution":"guaranteed",
-      "winners":[
+      "type": "achievements",
+      "id": "Pioneer Master I",
+      "distribution": "guaranteed",
+      "winners": [
         "1",
-        "4"
+        "4",
+        "5"
       ],
-      "distributionDetails":[
+      "distributionDetails": [
         {
-          "type":"guaranteed",
-          "winner":"1"
+          "type": "guaranteed",
+          "winner": "1"
         },
         {
-          "type":"guaranteed",
-          "winner":"4"
+          "type": "guaranteed",
+          "winner": "4"
+        },
+        {
+          "type": "guaranteed",
+          "winner": "5"
         }
       ]
     },
     {
-      "type":"creasuryButterflies",
-      "id":"Creasury Butterfly",
-      "distribution":"weighted-lottery",
-      "winners":[
+      "type": "creasuryButterflies",
+      "id": "Creasury Butterfly",
+      "distribution": "weighted-lottery",
+      "winners": [
         "1"
       ],
-      "distributionDetails":[
+      "distributionDetails": [
         {
-          "type":"weighted-lottery",
-          "winner":"1",
-          "participantCount":2,
-          "ticketCount":5,
-          "winningTicket":1
+          "type": "weighted-lottery",
+          "winner": "1",
+          "participantCount": 3,
+          "ticketCount": 7,
+          "winningTicket": 2
         }
       ]
     },
     {
-      "type":"whitelistSpots",
-      "id":"Early Presale Whitelist Spot",
-      "distribution":"weighted-lottery",
-      "winners":[
-        "4"
+      "type": "whitelistSpots",
+      "id": "Early Presale Whitelist Spot",
+      "distribution": "weighted-lottery",
+      "winners": [
+        "4", "5"
       ],
-      "distributionDetails":[
+      "distributionDetails": [
         {
-          "type":"assigned",
-          "winner":"4"
+          "type": "assigned",
+          "winner": "4"
+        },
+        {
+          "type": "assigned",
+          "winner": "5"
         }
       ]
     }
   ],
-  "unclaimed":[
+  "unclaimed": [
     {
-      "type":"whitelistSpots",
-      "id":"Early Presale Whitelist Spot",
-      "distribution":"weighted-lottery",
-      "supply":1
+      "type": "whitelistSpots",
+      "id": "Early Presale Whitelist Spot",
+      "distribution": "weighted-lottery",
+      "supply": 1
     }
   ]
 }

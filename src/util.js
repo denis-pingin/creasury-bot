@@ -13,10 +13,10 @@ export async function sendInviteMessage(client, guildId, message) {
     if (channel) {
       await channel.send(message);
     } else {
-      console.warn(`Invite channel with ID ${guildConfig.inviteChannelId} not found!`);
+      console.log(`Invite channel with ID ${guildConfig.inviteChannelId} not found!`);
     }
   } else {
-    console.warn('Invite channel ID not configured');
+    console.log('Invite channel ID not configured');
   }
 }
 
@@ -32,10 +32,10 @@ export async function sendLogMessage(client, guildId, message) {
     if (channel) {
       await channel.send(message);
     } else {
-      console.warn(`Log channel with ID ${guildConfig.logChannelId} not found!`);
+      console.log(`Log channel with ID ${guildConfig.logChannelId} not found!`);
     }
   } else {
-    console.warn('Log channel ID not configured');
+    console.log('Log channel ID not configured');
   }
 }
 

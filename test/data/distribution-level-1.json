@@ -6,7 +6,6 @@
       "id": "Pioneer Rookie I",
       "distribution": "guaranteed",
       "winners": [
-        "5",
         "7",
         "8",
         "9",
@@ -16,10 +15,6 @@
         "12"
       ],
       "distributionDetails": [
-        {
-          "type": "guaranteed",
-          "winner": "5"
-        },
         {
           "type": "guaranteed",
           "winner": "7"
@@ -55,14 +50,14 @@
       "id": "Creasury Butterfly",
       "distribution": "simple-lottery",
       "winners": [
-        "8"
+        "9"
       ],
       "distributionDetails": [
         {
           "type": "simple-lottery",
-          "winner": "8",
-          "participantCount": 8,
-          "ticketCount": 8,
+          "winner": "9",
+          "participantCount": 7,
+          "ticketCount": 7,
           "winningTicket": 2
         }
       ]
@@ -72,23 +67,16 @@
       "id": "Early Presale Whitelist Spot",
       "distribution": "simple-lottery",
       "winners": [
-        "9",
-        "7",
+        "8",
         "10",
         "11",
-        "5"
+        "7",
+        "6"
       ],
       "distributionDetails": [
         {
           "type": "simple-lottery",
-          "winner": "9",
-          "participantCount": 7,
-          "ticketCount": 7,
-          "winningTicket": 2
-        },
-        {
-          "type": "simple-lottery",
-          "winner": "7",
+          "winner": "8",
           "participantCount": 6,
           "ticketCount": 6,
           "winningTicket": 1
@@ -109,9 +97,16 @@
         },
         {
           "type": "simple-lottery",
-          "winner": "5",
+          "winner": "7",
           "participantCount": 3,
           "ticketCount": 3,
+          "winningTicket": 1
+        },
+        {
+          "type": "simple-lottery",
+          "winner": "6",
+          "participantCount": 2,
+          "ticketCount": 2,
           "winningTicket": 0
         }
       ]

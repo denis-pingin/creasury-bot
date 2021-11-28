@@ -2,7 +2,13 @@ import 'regenerator-runtime/runtime';
 import { generateMembers, getMockClient, getMockGuild, loadDataFile } from './test-util';
 import { MongoClient } from 'mongodb';
 import * as db from '../src/db';
-import { computeRankings, getScoreboard, getMemberRanking, getNextLevelPointsDiff } from '../src/ranking';
+import {
+  computeRankings,
+  getL2CutoffIndex,
+  getMemberRanking,
+  getNextLevelPointsDiff,
+  getScoreboard,
+} from '../src/ranking';
 import handleGuildMemberAdd from '../src/events/guildMemberAdd';
 import * as assert from 'assert';
 import handleGuildMemberRemove from '../src/events/guildMemberRemove';
@@ -62,7 +68,7 @@ describe('compute rankings', () => {
     // Verify rankings
     let result = await db.getStageRankings(stageId, guildId);
     // logObject('Rankings:', result);
-    // fs.writeFileSync(`${__dirname}/data/rankings.json`, JSON.stringify(result, null, 2));
+    // fs.writeFileSync(`${__dirname}/data/rankings1.json`, JSON.stringify(result, null, 2));
     assert.notEqual(result, null);
     result = result.rankings.reduce((prev, cur) => {
       prev[cur.id] = cur;
@@ -119,13 +125,28 @@ describe('compute rankings', () => {
   });
 
   test('next level points no master', async () => {
-    const rankingsNoMaster = loadDataFile('data/rankings-no-master.json');
-    expect(getNextLevelPointsDiff(1, 7, rankingsNoMaster, stages[0])).toBe(2);
+    const r = loadDataFile('data/rankings-no-master.json');
+    expect(getNextLevelPointsDiff(1, 7, r, stages[0])).toBe(2);
   });
 
   test('next level points one master', async () => {
-    const rankingsOneMaster = loadDataFile('data/rankings-one-master.json');
-    expect(getNextLevelPointsDiff(1, 6, rankingsOneMaster, stages[0])).toBe(2);
+    const r = loadDataFile('data/rankings-one-master.json');
+    expect(getNextLevelPointsDiff(1, 6, r, stages[0])).toBe(2);
+  });
+
+  test('cutoff index no l2', async () => {
+    const r = loadDataFile('data/rankings-no-l2.json');
+    expect(getL2CutoffIndex(r.rankings, stages[0])).toBe(2);
+  });
+
+  test('cutoff index one l2', async () => {
+    const r = loadDataFile('data/rankings-one-l2.json');
+    expect(getL2CutoffIndex(r.rankings, stages[0])).toBe(3);
+  });
+
+  test('cutoff index one l2 many l1', async () => {
+    const r = loadDataFile('data/rankings-one-l2-many-l1.json');
+    expect(getL2CutoffIndex(r.rankings, stages[0])).toBe(3);
   });
 });
 

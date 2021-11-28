@@ -278,14 +278,20 @@ async function sortMembers(memberPoints, guildId) {
   });
 }
 
-function getL2CutoffIndex(rankings, stage) {
-  const l2Candidates = rankings.filter(val => val.points >= stage.levels['2'].minPoints);
-  // logObject('Level 2 candidates:', l2Candidates);
+export function getL2CutoffIndex(rankings, stage) {
+  const l1AndAbove = rankings.filter(val => val.points >= stage.levels[1].minPoints);
+  // logObject('Level 1 and above:', l1AndAbove);
+  const l2AndAbove = l1AndAbove.filter(val => val.points >= stage.levels[2].minPoints);
+  // logObject('Level 2 and above:', l2AndAbove);
 
-  if (l2Candidates.length <= 3) {
+  if (l2AndAbove.length <= 3) {
+    // No masters
     return -1;
   } else {
-    return 2 + Math.floor((l2Candidates.length - 3) / 3);
+    // Take 33% of L1 and above, minus 3 champions
+    const cutoffIndex = 2 + Math.floor((l1AndAbove.length - 3) / 3);
+    // But only if they satisfy L2 requirements
+    return Math.min(cutoffIndex, l2AndAbove.length - 1);
   }
 }
 
