@@ -78,13 +78,17 @@ export async function startWatchingEvents(callback) {
   cache.running = true;
   const database = await getDatabase();
   while (cache.running) {
-    let event = await getUnprocessedEvent(database);
-    while (!event && cache.running) {
-      await pause(1000);
-      event = await getUnprocessedEvent(database);
-    }
-    if (event) {
-      await callback(event);
+    try {
+      let event = await getUnprocessedEvent(database);
+      while (!event && cache.running) {
+        await pause(1000);
+        event = await getUnprocessedEvent(database);
+      }
+      if (event) {
+        await callback(event);
+      }
+    } catch (error) {
+      console.error('Failed to process event', error);
     }
   }
 }
